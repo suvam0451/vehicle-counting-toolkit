@@ -9,7 +9,8 @@ from os.path import isfile, join
 
 style.use("ggplot")
 
-img = cv2.imread('images/image_02_02.jpg', 0)
+# This image reference should be made per json file
+img = cv2.imread('imagerefs/input_02_02.jpg', 0)
 shape = (img.shape[1], img.shape[0])
 
 # Converts screen-space position to pixel-space position

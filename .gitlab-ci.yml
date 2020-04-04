@@ -25,7 +25,7 @@ TrailGeneration:
     stage: analysis
     script:
         - conda --version
-        - conda install opencv scikit-learn matplotlib
+        - conda install opencv scikit-learn matplotlib -y -q
         - python MatplotTag.py
     dependencies:
         - TestStep
