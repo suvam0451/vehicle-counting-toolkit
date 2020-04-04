@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
 from sklearn.cluster import KMeans
-from os import listdir
+from os import listdir, mkdir
 from os.path import isfile, join
 
 style.use("ggplot")
@@ -20,6 +20,8 @@ def screen_to_pixel(coords, size):
 mainaray = np.array([])
 afk = np.array([[0,0]])
 
+# Make sure output directories exist
+mkdir("output")
 
 # get all intermediate json files
 inputFileList = [f for f in listdir("./intermediate") if isfile(join("./intermediate", f))]
