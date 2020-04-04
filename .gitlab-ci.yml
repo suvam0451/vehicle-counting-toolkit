@@ -20,7 +20,8 @@ TestStep:
     allow_failure: true
 
 TrailGeneration:
-    image: continuumio/miniconda3:latest
+    image: 
+        name: continuumio/miniconda3:latest
     stage: analysis
     script:
         - conda --version
@@ -29,8 +30,8 @@ TrailGeneration:
     dependencies:
         - TestStep
     artifacts:
-            paths:
-                - output/*
-            expire_in: '1 mos'
-        allow_failure: true
+        paths:
+            - output/*
+        expire_in: '1 mos'
+    allow_failure: true
     
