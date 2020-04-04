@@ -14,8 +14,8 @@ type trailData []trailDatum
 type mainArchive []archiveRecord
 
 type archiveRecord struct {
-	FrameID     int
-	FrameRecord frameRecord
+	FrameID     int         `json:"frame_id"`
+	FrameRecord frameRecord `json:"objects"`
 }
 
 type frameRecord []objectHistory
@@ -34,10 +34,10 @@ type object struct {
 }
 
 type objectHistory struct {
-	ClassID             int
-	Name                Name
-	RelativeCoordinates relativeCoordinates
-	TagCounter          int
+	ClassID             int                 `json:"class_id"`
+	Name                Name                `json:"name"`
+	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
+	TagCounter          int                 `json:"tagcounter"`
 	tagged              bool
 }
 
@@ -181,9 +181,13 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 	if _, err := os.Stat("./output"); os.IsNotExist(err) {
 		os.Mkdir("./output", os.ModeDir)
 	}
+	// Ensure all output paths exist...
+	if _, err := os.Stat("./intermediate"); os.IsNotExist(err) {
+		os.Mkdir("./intermediate", os.ModeDir)
+	}
 
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
-		ioutil.WriteFile("./output/"+filepath, jsonString, 0644)
+		ioutil.WriteFile("./intermediate/"+filepath, jsonString, 0644)
 	}
 }

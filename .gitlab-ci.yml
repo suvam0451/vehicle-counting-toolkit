@@ -2,6 +2,8 @@ image: golang:latest
 
 stages:
     - compile
+    - intermediate
+    - analysis
     - test
     - package
     - publish
@@ -10,9 +12,25 @@ TestStep:
     script:
         - go build main.go
         - go run main.go traildetect
-    stage: package
+    stage: intermediate
     artifacts:
         paths:
-            - output/*
+            - intermediate/*
         expire_in: '1 mos'
     allow_failure: true
+
+TrailGeneration:
+    image: continuumio/miniconda3:latest
+    stage: analysis
+    script:
+        - conda --version
+        - conda install opencv scikit-learn matplotlib
+        - python MatplotTag.py
+    dependencies:
+        - TestStep
+    artifacts:
+            paths:
+                - output/*
+            expire_in: '1 mos'
+        allow_failure: true
+    
