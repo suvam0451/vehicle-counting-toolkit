@@ -9,7 +9,7 @@ stages:
 TestStep:
     script:
         - go build main.go
-        - go run main.go traidetect
+        - go run main.go traildetect
     stage: package
     artifacts:
         paths:
