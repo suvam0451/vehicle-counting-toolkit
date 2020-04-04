@@ -177,6 +177,11 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 		})
 	}
 
+	// Ensure all output paths exist...
+	if _, err := os.Stat("./output"); os.IsNotExist(err) {
+		os.Mkdir("./output", os.ModeDir)
+	}
+
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
 		ioutil.WriteFile("./output/"+filepath, jsonString, 0644)
