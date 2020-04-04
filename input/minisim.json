@@ -1,0 +1,446 @@
+[
+	{
+		"frame_id": 25,
+		"objects": [
+			{
+				"class_id": 9,
+				"name": "traffic light",
+				"relative_coordinates": {
+					"center_x": 0.231696,
+					"center_y": 0.171106,
+					"width": 0.009297,
+					"height": 0.03432
+				},
+				"confidence": 0.39446
+			},
+			{
+				"class_id": 7,
+				"name": "truck",
+				"relative_coordinates": {
+					"center_x": 0.655859,
+					"center_y": 0.356568,
+					"width": 0.069226,
+					"height": 0.095286
+				},
+				"confidence": 0.389904
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.189471,
+					"center_y": 0.121886,
+					"width": 0.05228,
+					"height": 0.062466
+				},
+				"confidence": 0.978932
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.612844,
+					"center_y": 0.073411,
+					"width": 0.027008,
+					"height": 0.039019
+				},
+				"confidence": 0.971231
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.59059,
+					"center_y": 0.0486,
+					"width": 0.024241,
+					"height": 0.032148
+				},
+				"confidence": 0.969741
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.04035,
+					"center_y": 0.14432,
+					"width": 0.064192,
+					"height": 0.049421
+				},
+				"confidence": 0.941025
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.477311,
+					"center_y": 0.066538,
+					"width": 0.023922,
+					"height": 0.030485
+				},
+				"confidence": 0.890152
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.652991,
+					"center_y": 0.355033,
+					"width": 0.07323,
+					"height": 0.093967
+				},
+				"confidence": 0.877937
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.194512,
+					"center_y": 0.056582,
+					"width": 0.045657,
+					"height": 0.045644
+				},
+				"confidence": 0.986475
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.33995,
+					"center_y": 0.016492,
+					"width": 0.023962,
+					"height": 0.022912
+				},
+				"confidence": 0.848009
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.589035,
+					"center_y": 0.029951,
+					"width": 0.020764,
+					"height": 0.021244
+				},
+				"confidence": 0.803262
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.536614,
+					"center_y": 0.454035,
+					"width": 0.079223,
+					"height": 0.132393
+				},
+				"confidence": 0.986574
+			},
+			{
+				"class_id": 5,
+				"name": "bus",
+				"relative_coordinates": {
+					"center_x": 0.523624,
+					"center_y": 0.060261,
+					"width": 0.041328,
+					"height": 0.092005
+				},
+				"confidence": 0.380412
+			},
+			{
+				"class_id": 7,
+				"name": "truck",
+				"relative_coordinates": {
+					"center_x": 0.523624,
+					"center_y": 0.060261,
+					"width": 0.041328,
+					"height": 0.092005
+				},
+				"confidence": 0.47949
+			}
+		]
+	},
+	{
+		"frame_id": 26,
+		"objects": [
+			{
+				"class_id": 9,
+				"name": "traffic light",
+				"relative_coordinates": {
+					"center_x": 0.231667,
+					"center_y": 0.171007,
+					"width": 0.010032,
+					"height": 0.036817
+				},
+				"confidence": 0.368321
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.190937,
+					"center_y": 0.059188,
+					"width": 0.037187,
+					"height": 0.048546
+				},
+				"confidence": 0.977883
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.612672,
+					"center_y": 0.073049,
+					"width": 0.027457,
+					"height": 0.036629
+				},
+				"confidence": 0.970518
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.590952,
+					"center_y": 0.047666,
+					"width": 0.024813,
+					"height": 0.031624
+				},
+				"confidence": 0.961435
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.035223,
+					"center_y": 0.147975,
+					"width": 0.062052,
+					"height": 0.053429
+				},
+				"confidence": 0.943123
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.651424,
+					"center_y": 0.341689,
+					"width": 0.065182,
+					"height": 0.096176
+				},
+				"confidence": 0.926352
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.338927,
+					"center_y": 0.016984,
+					"width": 0.025036,
+					"height": 0.024606
+				},
+				"confidence": 0.89619
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.47691,
+					"center_y": 0.064306,
+					"width": 0.023737,
+					"height": 0.02973
+				},
+				"confidence": 0.883684
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.539698,
+					"center_y": 0.43513,
+					"width": 0.071959,
+					"height": 0.131031
+				},
+				"confidence": 0.988255
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.588805,
+					"center_y": 0.029144,
+					"width": 0.021503,
+					"height": 0.020934
+				},
+				"confidence": 0.801149
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.600609,
+					"center_y": 0.05216,
+					"width": 0.02051,
+					"height": 0.023874
+				},
+				"confidence": 0.279411
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.184134,
+					"center_y": 0.126561,
+					"width": 0.050026,
+					"height": 0.060886
+				},
+				"confidence": 0.988655
+			},
+			{
+				"class_id": 7,
+				"name": "truck",
+				"relative_coordinates": {
+					"center_x": 0.524105,
+					"center_y": 0.053976,
+					"width": 0.037854,
+					"height": 0.0945
+				},
+				"confidence": 0.470628
+			}
+		]
+	},
+	{
+		"frame_id": 27,
+		"objects": [
+			{
+				"class_id": 9,
+				"name": "traffic light",
+				"relative_coordinates": {
+					"center_x": 0.231632,
+					"center_y": 0.171007,
+					"width": 0.009277,
+					"height": 0.034386
+				},
+				"confidence": 0.449852
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.176846,
+					"center_y": 0.1303,
+					"width": 0.054732,
+					"height": 0.061048
+				},
+				"confidence": 0.986717
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.589075,
+					"center_y": 0.046472,
+					"width": 0.024155,
+					"height": 0.033226
+				},
+				"confidence": 0.963656
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.18857,
+					"center_y": 0.060401,
+					"width": 0.038111,
+					"height": 0.048714
+				},
+				"confidence": 0.959378
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.646417,
+					"center_y": 0.33338,
+					"width": 0.061222,
+					"height": 0.078968
+				},
+				"confidence": 0.957387
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.337432,
+					"center_y": 0.02133,
+					"width": 0.022479,
+					"height": 0.026487
+				},
+				"confidence": 0.926848
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.477478,
+					"center_y": 0.061589,
+					"width": 0.024366,
+					"height": 0.029698
+				},
+				"confidence": 0.909619
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.024268,
+					"center_y": 0.156509,
+					"width": 0.047388,
+					"height": 0.05664
+				},
+				"confidence": 0.88057
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.53628,
+					"center_y": 0.415698,
+					"width": 0.07198,
+					"height": 0.124812
+				},
+				"confidence": 0.987466
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.58784,
+					"center_y": 0.028971,
+					"width": 0.021819,
+					"height": 0.02334
+				},
+				"confidence": 0.745574
+			},
+			{
+				"class_id": 7,
+				"name": "truck",
+				"relative_coordinates": {
+					"center_x": 0.523995,
+					"center_y": 0.053844,
+					"width": 0.037612,
+					"height": 0.093408
+				},
+				"confidence": 0.484646
+			},
+			{
+				"class_id": 2,
+				"name": "car",
+				"relative_coordinates": {
+					"center_x": 0.613231,
+					"center_y": 0.072504,
+					"width": 0.028931,
+					"height": 0.036141
+				},
+				"confidence": 0.991224
+			}
+		]
+	}
+]

@@ -1,0 +1,18 @@
+image: golang:latest
+
+stages:
+    - compile
+    - test
+    - package
+    - publish
+
+TestStep:
+    script:
+        - go build main.go
+        - go run main.go traidetect
+    stage: package
+    artifacts:
+        paths:
+            - output/*
+        expire_in: '1 mos'
+    allow_failure: true

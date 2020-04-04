@@ -2,11 +2,11 @@ package traffic
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 type trailData []trailDatum
@@ -14,7 +14,7 @@ type trailData []trailDatum
 type mainArchive []archiveRecord
 
 type archiveRecord struct {
-	FrmaeID     int
+	FrameID     int
 	FrameRecord frameRecord
 }
 
@@ -70,46 +70,76 @@ type ModelParameters struct {
 	EliminateThreshold int
 }
 
+// func filter(vs []objectHistory, f func(objectHistory) bool) []objectHistory {
+// 	vsf := make([]objectHistory, 0)
+// 	for _, v := range vs {
+// 		if f(v) {
+// 			vsf = append(vsf, v)
+// 		}
+// 	}
+// 	return vsf
+// }
+
+func filter(vs []objectHistory, threshold int) []objectHistory {
+	vsf := make([]objectHistory, 0)
+	for _, v := range vs {
+		if v.TagCounter > threshold {
+			vsf = append(vsf, v)
+		}
+	}
+	return vsf
+}
+
 // DetectTrail detect trails for all files in given path
 func DetectTrail(inputpath string, params ModelParameters) {
 	// ounter := 1
-	var inputfiles []string
+	var inputfilespath []string
+	var inputfilesname []string
+	var wg sync.WaitGroup
 
 	// Error already handled above
 	filepath.Walk(inputpath,
 		func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() == false {
-				inputfiles = append(inputfiles, path)
+				inputfilespath = append(inputfilespath, path)
+				inputfilesname = append(inputfilesname, info.Name())
 			}
 			return nil
 		})
-	fmt.Println(inputfiles)
 
 	var ParsedStruct trailData
-	for _, file := range inputfiles {
+	for i, file := range inputfilespath {
 		if openfile, err := os.Open(file); err == nil {
 			byteValue, _ := ioutil.ReadAll(openfile)
 			if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
-				detectIndividualTrail(ParsedStruct, params)
+				wg.Add(1)
+
+				// Capture name of json file and run async
+				go func(filename string) {
+					detectIndividualTrail(ParsedStruct, params, filename)
+					wg.Done()
+				}(inputfilesname[i])
 			}
 		}
 	}
+
+	wg.Wait()
 }
 
-func detectIndividualTrail(data trailData, params ModelParameters) {
-	var previousFrames frameRecord
+func detectIndividualTrail(data trailData, params ModelParameters, filepath string) {
+	var previousFrameData frameRecord
 	var theArchive mainArchive
 	for i, frame := range data {
 		for _, currentobj := range frame.Objects {
 			tagged := false // will be set to true if object gets assigned to one of the previous frame objects
 
-			for _, prevobj := range previousFrames {
+			for idx, prevobj := range previousFrameData {
 				// ID match with untagged object
-				if prevobj.ClassID == currentobj.ClassID && prevobj.tagged == false {
+				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged {
 					// Distance calculations
-					if math.Abs(currentobj.RelativeCoordinates.CenterX-prevobj.RelativeCoordinates.CenterX) < params.XThreshold {
-						prevobj.RelativeCoordinates = currentobj.RelativeCoordinates
-						prevobj.tagged = true
+					if math.Abs(currentobj.RelativeCoordinates.CenterY-prevobj.RelativeCoordinates.CenterY) < params.YThreshold {
+						previousFrameData[idx].RelativeCoordinates = currentobj.RelativeCoordinates
+						previousFrameData[idx].tagged = true
 						tagged = true
 					}
 				}
@@ -117,7 +147,7 @@ func detectIndividualTrail(data trailData, params ModelParameters) {
 
 			// Handle if object was untagged
 			if !tagged {
-				previousFrames = append(previousFrames, objectHistory{
+				previousFrameData = append(previousFrameData, objectHistory{
 					ClassID:             currentobj.ClassID,
 					Name:                currentobj.Name,
 					RelativeCoordinates: currentobj.RelativeCoordinates,
@@ -127,22 +157,28 @@ func detectIndividualTrail(data trailData, params ModelParameters) {
 			}
 		}
 
-		var temporary frameRecord
-		// Update counters
-		for _, prevobj := range previousFrames {
-			temporary = append(temporary, objectHistory{
-				ClassID:             prevobj.ClassID,
-				Name:                prevobj.Name,
-				RelativeCoordinates: prevobj.RelativeCoordinates,
-				tagged:              false,
-				TagCounter:          prevobj.TagCounter,
-			})
+		// Increment if tagged and reset tag status
+		for idx, prevobj := range previousFrameData {
+			if prevobj.tagged {
+				previousFrameData[idx].TagCounter += params.Upvote
+			} else {
+				previousFrameData[idx].TagCounter += params.Downvote
+			}
+			previousFrameData[idx].tagged = false
 		}
+
+		// Eliminate any entry which was not tagged recently
+		previousFrameData = filter(previousFrameData, params.EliminateThreshold)
 
 		// Add frame record to archive
 		theArchive = append(theArchive, archiveRecord{
-			FrmaeID:     i,
-			FrameRecord: temporary,
+			FrameID:     i,
+			FrameRecord: previousFrameData,
 		})
+	}
+
+	// Write data to file
+	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
+		ioutil.WriteFile("./output/"+filepath, jsonString, 0644)
 	}
 }
