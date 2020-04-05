@@ -1,11 +1,18 @@
-import cv2
-import json, math
+""" This script takes all json files in intermediate/ folder
+    and plots then in graph and outputs it to output/ folder
+"""
+
+from os import listdir, mkdir
+from os.path import isfile, join, exists
+import json
+import math
+
 import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
 from sklearn.cluster import KMeans
-from os import listdir, mkdir
-from os.path import isfile, join
+
+import cv2
 
 style.use("ggplot")
 
@@ -17,11 +24,11 @@ shape = (img.shape[1], img.shape[0])
 def screen_to_pixel(coords, size):
     return (math.floor(coords[0]*size[0]), math.floor(coords[1]*size[1]))
 
-mainaray = np.array([])
-afk = np.array([[0,0]])
+afk = np.array([[0, 0]])
 
 # Make sure output directories exist
-mkdir("output")
+if exists("output") == False:
+    mkdir("output")
 
 # get all intermediate json files
 inputFileList = [f for f in listdir("./intermediate") if isfile(join("./intermediate", f))]
@@ -32,8 +39,8 @@ for inputfile in inputFileList:
         distros_dict = json.load(f)
         for frame in distros_dict:
             for uobject in frame["objects"]:
-                normalized_counter = min(max(uobject["tagcounter"] / 1024, 0), 1)
-                if(normalized_counter == 0):
+                normalized_counter = min(max(uobject["tagcounter"] / 1024.0, 0.0), 1.0)
+                if(normalized_counter == 0.0):
                     continue
                 effectpow = normalized_counter * 255 # (0,255) clamped
                 screen_coordinates = (uobject["relative_coordinates"]["center_x"], uobject["relative_coordinates"]["center_y"])
@@ -44,8 +51,7 @@ for inputfile in inputFileList:
 
     centroids = clf.cluster_centers_
 
-    colors =  10 * ["g.","r.", "c.","b.","k.","m.", "y."]
-    # print(len(afk))
+    colors = 10 * ["g.", "r.", "c.", "b.", "k.", "m.", "y."]
 
     # Number of horizontal slices to segment the image space to...
     n_slices = 16
@@ -57,9 +63,9 @@ for inputfile in inputFileList:
                 plt.plot(coord_set[0], coord_set[1], colors[i], markersize=5) # labels --> 0/1/2/3
 
     plt.gca().invert_yaxis()
-    plt.scatter(centroids[:,0], centroids[:,1], marker="x", s=150, linewidths=5)
+    plt.scatter(centroids[:, 0], centroids[:, 1], marker="x", s=150, linewidths=5)
     # Save the image to output folder by same name
     filename = inputfile[:len(inputfile)-5]
     plt.savefig(join("./output", filename + ".png"))
-    # plt.show()
+    plt.clf()
     print("processed:", inputfile)

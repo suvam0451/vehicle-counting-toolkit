@@ -34,9 +34,9 @@ to quickly create a Cobra application.`,
 		traffic.DetectTrail("./input", traffic.ModelParameters{
 			Upvote:             2,
 			Downvote:           -1,
-			XThreshold:         0.001,
-			YThreshold:         0.001,
-			EliminateThreshold: -5,
+			XThreshold:         0.00075,
+			YThreshold:         0.00075,
+			EliminateThreshold: -2,
 		})
 	},
 }
