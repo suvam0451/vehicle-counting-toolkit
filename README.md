@@ -4,15 +4,25 @@ Poring my traffic detection algorithm codes to golang.
 
 ## Goals
 
+This project is aimed towards creation of feasible real-time solutions for determining traffic flow characteristics and 
+statistics data generation using available lane information and general day-to-day vehicle behavior.
+
 The goals of this project are to come up with that is to real-time
 
 - Is able to run in real-time along live camera feed.
 - Adapt to indian traffic sitation as much as possible.
 
-![Segment Detection](https://i.imgur.com/Y0sq99i.png?1)
-https://imgur.com/a/93jSf2K
+## Case study
+
+In the earliest phases, we should be able to extract information from roads such as these categorized by :-
+
+- Clearly delineated lanes *(With all vehicles respecting the traffic)*
+- Camera feed is static
+
+![Ideal road scenario](https://i.imgur.com/gpMsysy.jpg)
 
 ## Approach
+
 
 #### CUDA computation
 
@@ -36,3 +46,34 @@ with a degree of relaxation.
 
 #### Darknet
 
+### Structure of this repository
+
+<details>
+     <summary>About the GO project</summary>
+     
+- The home directory of the repository is a golang packages that can be used to run the tokenizer passes.
+- The yaml file dictates the number of iterations and parameter input for each iteration.
+- The yolo_mark folder has a copy of windows build of [yolo_mark](https://github.com/AlexeyAB/Yolo_mark).
+You can use this to slice images from videos or tag images for genearting models.
+
+</details>
+
+<details>
+     <summary>The CUDA library written in python using numba</summary>
+
+- "python" folder has all the libraries along-with a sample main.py file to demonstrate all the algorithms.
+- Note that you should **use miniconda/anaconda** to get your libraries so that no version mismatch errors occur. 
+
+This works with anaconda/miniconda.
+
+```batch
+conda create -n yourenvname python=x.x anaconda
+conda install numba opencv matplotlib
+```
+
+If you prefer vanilla python with pip install, then here is the list of packages used *(I used python3.7)*.
+
+```
+pip install opencv numpy matplotlib numba
+```
+</details>
