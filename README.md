@@ -9,6 +9,7 @@ The goals of this project are to come up with that is to real-time
 - Is able to run in real-time along live camera feed.
 - Adapt to indian traffic sitation as much as possible.
 
+![Segment Detection](https://i.imgur.com/Y0sq99i.png?1)
 https://imgur.com/a/93jSf2K
 
 ## Approach
