@@ -77,3 +77,15 @@ If you prefer vanilla python with pip install, then here is the list of packages
 pip install opencv numpy matplotlib numba
 ```
 </details>
+
+### Instruction for developers
+
+<details>
+     <summary>How to use the libraries</summary>
+
+1. Copy the `yolo_mark.exe` in /bin folder to directory with your video files. The image sampling can be done by the following command. An interval of 10 is recommended for no GPU and you can go as less as 4 if you have a  GPU and videos < 5min length
+
+```
+yolo_mark.exe outpath cap_video videofile.mp4 10
+```
+</details>   
