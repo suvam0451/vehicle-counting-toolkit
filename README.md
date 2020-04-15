@@ -81,7 +81,16 @@ pip install opencv numpy matplotlib numba
 ### Instruction for developers
 
 <details>
-     <summary>How to use the libraries</summary>
+     <summary>Preliminary: Bulk generation of image slices / list generation</summary>
+
+- Start with the /bin folder. Copy over images to /bin/input folder
+- Run the `GenerateImages.ps1` powershell file. This will create an /intermediate folder and insert **.txt files** with lists of generated image per video file in /input folder.
+The images themselves will be outputted to /imagesets folder.
+- Run the `DarknetProcess.ps1` powershell file. This will create an /output folder and start inserting **.json files** with detection data per video file in /input folder.
+</details>
+
+<details>
+     <summary>CUDA scripts: </summary>
 
 1. Copy the `yolo_mark.exe` in /bin folder to directory with your video files. The image sampling can be done by the following command. An interval of 10 is recommended for no GPU and you can go as less as 4 if you have a  GPU and videos < 5min length
 
