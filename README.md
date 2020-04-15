@@ -110,6 +110,15 @@ pwsh
 </details>
 
 <details>
+     <summary>CUDA setup </summary>
+
+Before running the CUDA scripts, we have to setup our CUDA environments and install required packages. This section will just list the commands but for a more step-by-step guide, please read this guide instead.
+
+After following that guide, depending on the shell you are using, activate the conda environment and run the `matplotTag.py` script from /visualizers folder.
+
+</details>
+
+<details>
      <summary>CUDA scripts: </summary>
 
 1. Copy the `yolo_mark.exe` in /bin folder to directory with your video files. The image sampling can be done by the following command. An interval of 10 is recommended for no GPU and you can go as less as 4 if you have a  GPU and videos < 5min length
