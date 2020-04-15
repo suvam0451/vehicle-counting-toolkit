@@ -1,0 +1,4 @@
+input/*
+*.dll
+imagesets/*
+intermediate/*
