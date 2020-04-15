@@ -116,6 +116,26 @@ Before running the CUDA scripts, we have to setup our CUDA environments and inst
 
 After following that guide, depending on the shell you are using, activate the conda environment and run the `matplotTag.py` script from /visualizers folder.
 
+### Powershell
+```powershell
+powershell
+conda activate traffic_tools
+python matplotTag.py
+```
+
+### Powershell Core
+```powershell
+pwsh
+conda activate traffic_tools
+python matplotTag.py
+```
+
+### CMD
+```cmd
+conda activate traffic_tools
+python matplotTag.py
+```
+
 </details>
 
 <details>
