@@ -83,10 +83,30 @@ pip install opencv numpy matplotlib numba
 <details>
      <summary>Preliminary: Bulk generation of image slices / list generation</summary>
 
+
+**NOTE: All the paths mentioned here are relative to the /bin folder**
+
 - Start with the /bin folder. Copy over images to /bin/input folder
 - Run the `GenerateImages.ps1` powershell file. This will create an /intermediate folder and insert **.txt files** with lists of generated image per video file in /input folder.
 The images themselves will be outputted to /imagesets folder.
 - Run the `DarknetProcess.ps1` powershell file. This will create an /output folder and start inserting **.json files** with detection data per video file in /input folder.
+
+
+### With powershell
+
+```powershell
+powershell
+.\GenerateImages.ps1
+.\DarknetProcess.ps1
+```
+
+### With powershell Core
+
+```powershell
+pwsh
+.\GenerateImages.ps1
+.\DarknetProcess.ps1
+```
 </details>
 
 <details>
