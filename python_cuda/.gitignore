@@ -1,0 +1,5 @@
+intermediate/*
+output/*
+images/*
+__pycache__/*
+.vscode/*
