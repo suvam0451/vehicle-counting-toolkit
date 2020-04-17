@@ -150,6 +150,7 @@ for inputfile in inputFileList:
 
     REGION_DATA = np.zeros((COORD_LIST.shape[0], 2), dtype=np.uint8)
 
+    # Number of segments we are dividing to
     segments = 8
 
     # CUDA version
@@ -168,21 +169,33 @@ for inputfile in inputFileList:
         coloridx = REGION_DATA[idx][0]
         if coloridx == np.iinfo(np.uint8).max:
             continue
-        # plt.scatter(point[0], point[1],
-        #             marker="o", s=0.2, c=colors[REGION_DATA[idx][0]], linewidths=5)
+        plt.scatter(point[0], point[1],
+                    marker="o", s=0.2, c=colors[REGION_DATA[idx][0]], linewidths=5)
 
     X_COORD_LIST = COORD_LIST[:, 0:1]
     Y_COORD_LIST = COORD_LIST[:, 1:2]
 
     # Boolean mask
-    mask =  COORD_LIST[:, 1] > 0.5
+    # mask =  COORD_LIST[:, 1] > 0.5
+
     # print(mask)
-    print(COORD_LIST[mask, :])
+
     # condition = Y_COORD_LIST <  0.5
     # condition = COORD_LIST[:, 1:2] < 0.5
     # print(COORD_LIST[condition])
-    # for i in range(segments):
-    #     condition = X_COORD_LIST > 0.5
+    for i in range(segments):
+        mask = REGION_DATA[:, 0] == i
+        sampled_coords = COORD_LIST[mask, :]
+
+        # Classifier on ROI
+        clf = KMeans()
+        clf.fit(sampled_coords)
+        centroids = clf.cluster_centers_
+        print(centroids)
+        for j in range(centroids.shape[0]):
+            plt.scatter(centroids[j][0], centroids[j][1],
+                        marker="*", s=36, c="w", linewidths=5)
+
     #     print(condition)
     #     choices = [X_COORD_LIST]
     #     subarray = np.select(choices, condition)
