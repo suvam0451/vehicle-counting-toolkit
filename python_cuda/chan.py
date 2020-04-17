@@ -150,12 +150,14 @@ for inputfile in inputFileList:
 
     REGION_DATA = np.zeros((COORD_LIST.shape[0], 2), dtype=np.uint8)
 
+    segments = 8
+
     # CUDA version
     greedy_pick[BPG, TPB](COORD_LIST, TAG_DATA, REGION_DATA,
-                          8, 256.0)  # Call the CUDA function
+                          segments, 256.0)  # Call the CUDA function
 
     # print(REGION_DATA[95:100])
-    
+
     colors = 1000 * ['g', 'r', 'c', 'b', 'k', 'm', 'y']
 
     #  Non CUDA version
@@ -166,8 +168,25 @@ for inputfile in inputFileList:
         coloridx = REGION_DATA[idx][0]
         if coloridx == np.iinfo(np.uint8).max:
             continue
-        plt.scatter(point[0], point[1],
-                    marker="o", s=0.2, c=colors[REGION_DATA[idx][0]], linewidths=5)
+        # plt.scatter(point[0], point[1],
+        #             marker="o", s=0.2, c=colors[REGION_DATA[idx][0]], linewidths=5)
+
+    X_COORD_LIST = COORD_LIST[:, 0:1]
+    Y_COORD_LIST = COORD_LIST[:, 1:2]
+
+    # Boolean mask
+    mask =  COORD_LIST[:, 1] > 0.5
+    # print(mask)
+    print(COORD_LIST[mask, :])
+    # condition = Y_COORD_LIST <  0.5
+    # condition = COORD_LIST[:, 1:2] < 0.5
+    # print(COORD_LIST[condition])
+    # for i in range(segments):
+    #     condition = X_COORD_LIST > 0.5
+    #     print(condition)
+    #     choices = [X_COORD_LIST]
+    #     subarray = np.select(choices, condition)
+    #     print(subarray)
     # int(REGION_DATA[idx][0])
     # np.save("output/a.npy", MEGALIST)
     # with open('output/your_file.txt', 'w') as f:

@@ -1,5 +1,5 @@
 
-
+import numpy as np
 
 def lazy_pick(coord_list, tag_data, region_data, num_slice, intensity_param):
     # Height of slice
@@ -17,3 +17,6 @@ def lazy_pick(coord_list, tag_data, region_data, num_slice, intensity_param):
         for iter in range(num_slice):
             if(point[1] > (iter * segment_size_y) and point[1] < ((1 + iter) * segment_size_y)):
                 region_data[idx][0] = iter
+
+
+# def LinearRegression(points, )
