@@ -34,6 +34,7 @@ type object struct {
 }
 
 type objectHistory struct {
+	EntryID				int					`json:"id"` // ID assigned to every unique vehicle path 
 	ClassID             int                 `json:"class_id"`
 	Name                Name                `json:"name"`
 	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
@@ -70,24 +71,18 @@ type ModelParameters struct {
 	EliminateThreshold int
 }
 
-// func filter(vs []objectHistory, f func(objectHistory) bool) []objectHistory {
-// 	vsf := make([]objectHistory, 0)
-// 	for _, v := range vs {
-// 		if f(v) {
-// 			vsf = append(vsf, v)
-// 		}
-// 	}
-// 	return vsf
-// }
-
-func filter(vs []objectHistory, threshold int) []objectHistory {
-	vsf := make([]objectHistory, 0)
+// Filters struct array for minimum threshold value
+func filter(vs []objectHistory, threshold int) ([]objectHistory, []objectHistory) {
+	accepted := make([]objectHistory, 0)
+	rejected := make([]objectHistory, 0)
 	for _, v := range vs {
 		if v.TagCounter > threshold {
-			vsf = append(vsf, v)
+			accepted = append(accepted, v)
+		} else{
+			rejected = append(rejected, v)
 		}
 	}
-	return vsf
+	return accepted, rejected
 }
 
 // DetectTrail detect trails for all files in given path
