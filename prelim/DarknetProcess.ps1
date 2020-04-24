@@ -1,8 +1,12 @@
-$Folders = Get-Childitem "intermediate" -File | Where-Object { $_.extension -eq ".txt" }
+## INFO : Passes the generated text lists through darknet
+
+# We should run the scripts from inside
+Set-Location bin
+$Folders = Get-Childitem "../intermediate" -File | Where-Object { $_.extension -eq ".txt" }
 
 foreach ($ListFile in $Folders) {
     $ListFileName = [io.path]::GetFileNameWithoutExtension($ListFile.FullName)
-    $OutputPath = "output/$ListFileName.json"
+    $OutputPath = "../output/$ListFileName.json"
     Get-Content $ListFile | .\darknet.exe detector test cfg/coco.data cfg/yolov3.cfg cfg/yolov3.weights -dont_show -out $OutputPath
     # Replace "\" with "/" to avoid JSON parsing errors across platforms
     ((Get-Content -Path $OutputPath -Raw) -replace '\\', '/') | Set-Content $OutputPath
@@ -28,5 +32,9 @@ foreach ($ListFile in $Folders) {
         }
         $RootJSONObject += $base
     }
-    $RootJSONObject | ConvertTo-Json -depth 100 | Out-File "LonelyTogether.json"
+    $RootJSONObject | ConvertTo-Json -depth 100 | Out-File "../output/LonelyTogether.json"
 }
+
+# Exit directory and notify completion
+Set-Location ..
+Write-Output "Done..."
