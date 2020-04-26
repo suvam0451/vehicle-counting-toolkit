@@ -1,3 +1,10 @@
+/**
+Outputs the following :-
+
+1. filename.json --
+2. filename_veh.json -- Tracked frames for each vehicle tag. Entries with low score are eliminated.
+*/
+
 package traffic
 
 import (
@@ -5,7 +12,9 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -13,6 +22,16 @@ type trailData []trailDatum
 
 type mainArchive []archiveRecord
 
+type trackArchive []vehicleTracks
+
+type vehicleTracks struct {
+	VehicleID   int      `json:"vehicle_id"`  // ID given to the vehicle
+	FrameCount  int      `json:"frame_count"` // Number of frames for which this object was detected
+	ClassID     int      `json:"class_id"`    // ClassID for this vehicle tyype
+	TrackPoints []object `json:"objects"`     // List of co-ordinates
+}
+
+// Holds record for all the previous frames
 type archiveRecord struct {
 	FrameID     int         `json:"frame_id"`
 	FrameRecord frameRecord `json:"objects"`
@@ -34,7 +53,7 @@ type object struct {
 }
 
 type objectHistory struct {
-	EntryID             int                 `json:"id"` // ID assigned to every unique vehicle path
+	VehicleID           int                 `json:"id"` // ID assigned to every unique vehicle path
 	ClassID             int                 `json:"class_id"`
 	Name                Name                `json:"name"`
 	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
@@ -83,6 +102,20 @@ func filter(vs []objectHistory, threshold int) ([]objectHistory, []objectHistory
 	return accepted, rejected
 }
 
+// Any vehicle trail with < minThreshold number of data will be pruned
+func pruneFalsePositives(archive []vehicleTracks, minThreshold int) (accepted []vehicleTracks, rejected []vehicleTracks) {
+	// accepted := make([]vehicleTracks, 0)
+	// rejected := make([]vehicleTracks, 0)
+	for _, v := range archive {
+		if v.FrameCount > minThreshold {
+			accepted = append(accepted, v)
+		} else {
+			rejected = append(rejected, v)
+		}
+	}
+	return
+}
+
 // DetectTrail detect trails for all files in given path
 func DetectTrail(inputpath string, params ModelParameters) {
 	// ounter := 1
@@ -107,7 +140,7 @@ func DetectTrail(inputpath string, params ModelParameters) {
 			if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
 				wg.Add(1)
 
-				// Capture name of json file and run async
+				// Multi-threaded processing of input files
 				go func(filename string) {
 					detectIndividualTrail(ParsedStruct, params, filename)
 					wg.Done()
@@ -122,6 +155,9 @@ func DetectTrail(inputpath string, params ModelParameters) {
 func detectIndividualTrail(data trailData, params ModelParameters, filepath string) {
 	var previousFrameData frameRecord
 	var theArchive mainArchive
+	var perVehicleTrack trackArchive
+	var vehicleIDIndex int = 0
+
 	for i, frame := range data {
 		for _, currentobj := range frame.Objects {
 			tagged := false // will be set to true if object gets assigned to one of the previous frame objects
@@ -131,22 +167,50 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged {
 					// Distance calculations
 					if math.Abs(currentobj.RelativeCoordinates.CenterY-prevobj.RelativeCoordinates.CenterY) < params.YThreshold {
+						// TAG_SUCCESS case : a close enough co-ordinate was detected for a previously existing entry
 						previousFrameData[idx].RelativeCoordinates = currentobj.RelativeCoordinates
 						previousFrameData[idx].tagged = true
 						tagged = true
+
+						// TAG_SUCCESS case : increment the co-ordinates to the list
+						perVehicleTrack[previousFrameData[idx].VehicleID].TrackPoints = append(perVehicleTrack[previousFrameData[idx].VehicleID].TrackPoints,
+							currentobj)
+						// TAG_SUCCESS case : increment the #frames for which object was tracked
+						perVehicleTrack[previousFrameData[idx].VehicleID].FrameCount++
 					}
 				}
 			}
 
-			// Handle if object was untagged
+			// Handle if object was untagged (new object detected)
 			if !tagged {
-				previousFrameData = append(previousFrameData, objectHistory{
+				// SKIP : "traffic_light": 9, "person" : 0
+				if currentobj.ClassID == 9 || currentobj.ClassID == 0 {
+					continue
+				}
+
+				// TAG_FAILURE case : Add entry for new vehicleID in list of vehicle tracks
+				perVehicleTrack = append(perVehicleTrack, vehicleTracks{
+					VehicleID:  vehicleIDIndex,
+					FrameCount: 1,
+					ClassID:    currentobj.ClassID,
+				})
+
+				// TAG_FAILURE case : the vehicleID must exist in the perVehicleTrack arrays
+				perVehicleTrack[vehicleIDIndex].TrackPoints = append(perVehicleTrack[vehicleIDIndex].TrackPoints, currentobj)
+
+				tmpStruct := objectHistory{
+					VehicleID:           vehicleIDIndex,
 					ClassID:             currentobj.ClassID,
 					Name:                currentobj.Name,
 					RelativeCoordinates: currentobj.RelativeCoordinates,
 					TagCounter:          0,
 					tagged:              true,
-				})
+				}
+
+				previousFrameData = append(previousFrameData, tmpStruct)
+
+				// In the end, Increment index for next vehicle ID
+				vehicleIDIndex++
 			}
 		}
 
@@ -174,7 +238,6 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 	if _, err := os.Stat("./output"); os.IsNotExist(err) {
 		os.Mkdir("./output", os.ModeDir)
 	}
-	// Ensure all output paths exist...
 	if _, err := os.Stat("./intermediate"); os.IsNotExist(err) {
 		os.Mkdir("./intermediate", os.ModeDir)
 	}
@@ -182,5 +245,33 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
 		ioutil.WriteFile("./intermediate/"+filepath, jsonString, 0644)
+	}
+
+	// Write data to file (vehicle track data)
+	if jsonString, err := json.MarshalIndent(perVehicleTrack, "", " "); err == nil {
+		// Filename modified to xyz_vehicles.json
+		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh.json"
+		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
+	}
+
+	// Test (pruned data - at least 10 frames) --> Noise
+	accepted, _ := pruneFalsePositives(perVehicleTrack, 3)
+	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
+		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh_0.5s.json"
+		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
+	}
+
+	// Test (pruned data - at least 60 frames) --> Half-second
+	accepted, _ = pruneFalsePositives(perVehicleTrack, 6)
+	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
+		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh_1.0s.json"
+		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
+	}
+
+	// Test (pruned data - at least 60 frames) --> Half-second
+	accepted, _ = pruneFalsePositives(perVehicleTrack, 12)
+	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
+		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh_2.0s.json"
+		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
 	}
 }

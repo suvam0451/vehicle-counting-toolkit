@@ -1,5 +1,13 @@
 package traffic
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sync"
+)
+
 // type trailData []trailDatum
 
 // type mainArchive []archiveRecord
@@ -32,6 +40,20 @@ package traffic
 // 	TagCounter          int                 `json:"tagcounter"`
 // 	tagged              bool
 // }
+
+// CompactFrame : More compacted frame datas
+type CompactFrame struct {
+	frameID int
+	objects []CompactObject
+}
+
+// CompactObject : More compact single object data
+type CompactObject struct {
+	classID    int
+	centerX    float32
+	centerY    float32
+	confidence float32
+}
 
 // type relativeCoordinates struct {
 // 	CenterX float64 `json:"center_x"`
@@ -66,3 +88,33 @@ package traffic
 // func DetectTrail(inputpath string, params ModelParameters) {
 
 // }
+
+// DetectTrailCustom : I am modifying the codebase for more compact data format
+func DetectTrailCustom(inputpath string, params ModelParameters) {
+
+	reA := regexp.MustCompile(`^A_2_[0-9]_02\.json$`)
+	// reB := regexp.MustCompile(`^B_2_[0-9]_02\.json$`)
+	// reC := regexp.MustCompile(`^C_2_[0-9]_02\.json$`)
+	// reF := regexp.MustCompile(`^F_2_[0-9]_02\.json$`)
+	// reG := regexp.MustCompile(`^G_2_[0-9]_02\.json$`)
+
+	// ounter := 1
+	var inputfilespath []string
+	var inputfilesname []string
+	var wg sync.WaitGroup
+
+	// Error already handled above
+	filepath.Walk(inputpath,
+		func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() == false && reA.MatchString(info.Name()) {
+				inputfilespath = append(inputfilespath, path)
+				inputfilesname = append(inputfilesname, info.Name())
+			}
+			return nil
+		})
+
+	fmt.Println(inputfilespath)
+	fmt.Println(inputfilespath)
+
+	wg.Wait()
+}
