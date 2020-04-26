@@ -34,7 +34,7 @@ type object struct {
 }
 
 type objectHistory struct {
-	EntryID				int					`json:"id"` // ID assigned to every unique vehicle path 
+	EntryID             int                 `json:"id"` // ID assigned to every unique vehicle path
 	ClassID             int                 `json:"class_id"`
 	Name                Name                `json:"name"`
 	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
@@ -45,8 +45,6 @@ type objectHistory struct {
 type relativeCoordinates struct {
 	CenterX float64 `json:"center_x"`
 	CenterY float64 `json:"center_y"`
-	Width   float64 `json:"width"`
-	Height  float64 `json:"height"`
 }
 
 // Name : List of tag names in darknet
@@ -78,7 +76,7 @@ func filter(vs []objectHistory, threshold int) ([]objectHistory, []objectHistory
 	for _, v := range vs {
 		if v.TagCounter > threshold {
 			accepted = append(accepted, v)
-		} else{
+		} else {
 			rejected = append(rejected, v)
 		}
 	}
@@ -163,7 +161,7 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 		}
 
 		// Eliminate any entry which was not tagged recently
-		previousFrameData = filter(previousFrameData, params.EliminateThreshold)
+		previousFrameData, _ = filter(previousFrameData, params.EliminateThreshold)
 
 		// Add frame record to archive
 		theArchive = append(theArchive, archiveRecord{
