@@ -1,7 +1,8 @@
 package traffic
 
 import (
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,7 +34,7 @@ import (
 // }
 
 // type objectHistory struct {
-// 	EntryID             int                 `json:"id"` // ID assigned to every unique vehicle path
+// 	EntryID             int                 `json:"id"`
 // 	ClassID             int                 `json:"class_id"`
 // 	Name                Name                `json:"name"`
 // 	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
@@ -41,18 +42,51 @@ import (
 // 	tagged              bool
 // }
 
+// Holds history of all past frames
+type customArchive struct {
+	frameID int
+}
+
+// CustomFrameData : Main container for our combined data segments
+type CustomFrameData []CompactFrame
+
 // CompactFrame : More compacted frame datas
 type CompactFrame struct {
 	frameID int
 	objects []CompactObject
 }
 
+// TaggedObject : Represents a tagged vehicle and its trajectory
+type TaggedObject struct {
+	ObjectID int             `json:"id"`
+	ClassID  int             `json:"class_id"`
+	Data     []CompactCoords `json:"data"`
+}
+
 // CompactObject : More compact single object data
 type CompactObject struct {
-	classID    int
-	centerX    float32
-	centerY    float32
-	confidence float32
+	ClassID    int     `json:"class_id"`
+	CenterX    float64 `json:"center_x"`
+	CenterY    float64 `json:"center_y"`
+	confidence float64 `json:"confidence"`
+}
+
+// PreviousFrameObject : Struct to hold
+type PreviousFrameObject struct {
+	ObjectID   int     `json:"id"`
+	ClassID    int     `json:"class_id"`
+	CenterX    float64 `json:"center_x"`
+	CenterY    float64 `json:"center_y"`
+	confidence float64 `json:"confidence"`
+	TagCounter int     `json:"tagcounter"`
+	tagged     bool
+}
+
+// CompactCoords : More compact ccord data
+type CompactCoords struct {
+	CenterX    float64 `json:"center_x"`
+	CenterY    float64 `json:"center_y"`
+	Confidence float64 `json:"confidence"`
 }
 
 // type relativeCoordinates struct {
@@ -113,8 +147,48 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 			return nil
 		})
 
-	fmt.Println(inputfilespath)
-	fmt.Println(inputfilespath)
+	// Gnerate a single object from segmented files
+	var SourceObject CustomFrameData
+	for _, file := range inputfilespath {
+		var tmpData CustomFrameData
+		if openfile, err := os.Open(file); err == nil {
+			byteValue, _ := ioutil.ReadAll(openfile)
+			if err := json.Unmarshal(byteValue, &tmpData); err == nil {
+				SourceObject = append(SourceObject, tmpData...)
+			}
+		}
+	}
 
+	runAnalysis(SourceObject, params, "outputnew")
 	wg.Wait()
+}
+
+func runAnalysis(source CustomFrameData, params ModelParameters, outpath string) {
+	var previousFrameData []PreviousFrameObject
+	var theArchive mainArchive
+	var perVehicleTrack trackArchive
+	var vehicleIDIndex int = 0
+
+	for i, frame := range source {
+		for _, currentobj := range frame.objects {
+			tagged := false
+
+			for idx, prevobj := range previousFrameData {
+				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged {
+					// TAG_SUCCESS case : a close enough co-ordinate was detected
+					// for a previously existing entry
+					previousFrameData[idx].CenterX = currentobj.CenterX
+					previousFrameData[idx].CenterY = currentobj.CenterY
+					previousFrameData[idx].confidence = currentobj.confidence
+					previousFrameData[idx].tagged = true
+					tagged = true
+
+					foundID := previousFrameData[idx].ObjectID
+					perVehicleTrack[foundID].TrackPoints = append()
+
+				}
+			}
+			// for idx, prevobj
+		}
+	}
 }
