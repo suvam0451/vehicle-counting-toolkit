@@ -16,8 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	traffic "gitlab.com/suvam0451/trafficdetection/traffic"
 )
@@ -40,7 +38,6 @@ to quickly create a Cobra application.`,
 			YThreshold:         0.00075,
 			EliminateThreshold: -2,
 		})
-		fmt.Println("trailalt called")
 	},
 }
 

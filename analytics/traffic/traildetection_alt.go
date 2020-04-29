@@ -9,42 +9,10 @@ import (
 	"sync"
 )
 
-// type trailData []trailDatum
-
-// type mainArchive []archiveRecord
-
-// type archiveRecord struct {
-// 	FrameID     int         `json:"frame_id"`
-// 	FrameRecord frameRecord `json:"objects"`
-// }
-
-// type frameRecord []objectHistory
-
-// type trailDatum struct {
-// 	FrameID  int64    `json:"frame_id"`
-// 	Filename string   `json:"filename"`
-// 	Objects  []object `json:"objects"`
-// }
-
-// type object struct {
-// 	ClassID             int                 `json:"class_id"`
-// 	Name                Name                `json:"name"`
-// 	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
-// 	Confidence          float64             `json:"confidence"`
-// }
-
-// type objectHistory struct {
-// 	EntryID             int                 `json:"id"`
-// 	ClassID             int                 `json:"class_id"`
-// 	Name                Name                `json:"name"`
-// 	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
-// 	TagCounter          int                 `json:"tagcounter"`
-// 	tagged              bool
-// }
-
 // Holds history of all past frames
 type customArchive struct {
-	frameID int
+	FrameID     int                   `json:"frame_id"`
+	FrameRecord []PreviousFrameObject `json:"frames"`
 }
 
 // CustomFrameData : Main container for our combined data segments
@@ -52,8 +20,8 @@ type CustomFrameData []CompactFrame
 
 // CompactFrame : More compacted frame datas
 type CompactFrame struct {
-	frameID int
-	objects []CompactObject
+	FrameID int             `json:"frame_id"`
+	Objects []CompactObject `json:"objects"`
 }
 
 // TaggedObject : Represents a tagged vehicle and its trajectory
@@ -89,40 +57,6 @@ type CompactCoords struct {
 	Confidence float64 `json:"confidence"`
 }
 
-// type relativeCoordinates struct {
-// 	CenterX float64 `json:"center_x"`
-// 	CenterY float64 `json:"center_y"`
-// 	Width   float64 `json:"width"`
-// 	Height  float64 `json:"height"`
-// }
-
-// // Name : List of tag names in darknet
-// type Name string
-
-// const (
-// 	Bicycle      Name = "bicycle"
-// 	Bus          Name = "bus"
-// 	Car          Name = "car"
-// 	Motorbike    Name = "motorbike"
-// 	Person       Name = "person"
-// 	TrafficLight Name = "traffic light"
-// 	Truck        Name = "truck"
-// )
-
-// // ModelParameters : Parameters for our model
-// type ModelParameters struct {
-// 	Upvote             int
-// 	Downvote           int
-// 	XThreshold         float64
-// 	YThreshold         float64
-// 	EliminateThreshold int
-// }
-
-// // DetectTrail detect trails for all files in given path
-// func DetectTrail(inputpath string, params ModelParameters) {
-
-// }
-
 // DetectTrailCustom : I am modifying the codebase for more compact data format
 func DetectTrailCustom(inputpath string, params ModelParameters) {
 
@@ -134,7 +68,7 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 
 	// ounter := 1
 	var inputfilespath []string
-	var inputfilesname []string
+	// var inputfilesname []string
 	var wg sync.WaitGroup
 
 	// Error already handled above
@@ -142,7 +76,7 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 		func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() == false && reA.MatchString(info.Name()) {
 				inputfilespath = append(inputfilespath, path)
-				inputfilesname = append(inputfilesname, info.Name())
+				// inputfilesname = append(inputfilesname, info.Name())
 			}
 			return nil
 		})
@@ -159,36 +93,114 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 		}
 	}
 
+	// Write data to file
+	if jsonString, err := json.MarshalIndent(SourceObject, "", " "); err == nil {
+		ioutil.WriteFile("./outputnew/source.json", jsonString, 0644)
+	}
+
 	runAnalysis(SourceObject, params, "outputnew")
 	wg.Wait()
 }
 
 func runAnalysis(source CustomFrameData, params ModelParameters, outpath string) {
 	var previousFrameData []PreviousFrameObject
-	var theArchive mainArchive
+	var theArchive []customArchive
 	var perVehicleTrack trackArchive
 	var vehicleIDIndex int = 0
 
 	for i, frame := range source {
-		for _, currentobj := range frame.objects {
+		for _, currentobj := range frame.Objects {
 			tagged := false
 
 			for idx, prevobj := range previousFrameData {
-				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged {
+				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged && !previousFrameData[idx].tagged {
 					// TAG_SUCCESS case : a close enough co-ordinate was detected
 					// for a previously existing entry
 					previousFrameData[idx].CenterX = currentobj.CenterX
 					previousFrameData[idx].CenterY = currentobj.CenterY
 					previousFrameData[idx].confidence = currentobj.confidence
 					previousFrameData[idx].tagged = true
+
+					// TAG_SUCCESS case : increment the co-ordinates to the list
+					_ID := previousFrameData[idx].ObjectID
+					perVehicleTrack[_ID].TrackPoints = append(perVehicleTrack[_ID].TrackPoints,
+						CompactCoords{
+							CenterX:    currentobj.CenterX,
+							CenterY:    currentobj.CenterY,
+							Confidence: currentobj.confidence,
+						})
+					// TAG_SUCCESS case : increment the #frames for which object was tracked
+					perVehicleTrack[_ID].FrameCount++
+
 					tagged = true
-
-					foundID := previousFrameData[idx].ObjectID
-					perVehicleTrack[foundID].TrackPoints = append()
-
+					break
 				}
 			}
-			// for idx, prevobj
+
+			// Handle if object was untagged (new object detected)
+			if !tagged {
+				// SKIP : "traffic_light": 9, "person" : 0
+				if currentobj.ClassID == 9 || currentobj.ClassID == 0 {
+					continue
+				}
+
+				// TAG_FAILURE case : Add entry for new vehicleID in list of vehicle tracks
+				perVehicleTrack = append(perVehicleTrack, VehicleTracks{
+					VehicleID:  vehicleIDIndex,
+					FrameCount: 1,
+					ClassID:    currentobj.ClassID,
+				})
+
+				// TAG_FAILURE case : the vehicleID must exist in the perVehicleTrack arrays
+				perVehicleTrack[vehicleIDIndex].TrackPoints = append(perVehicleTrack[vehicleIDIndex].TrackPoints, CompactCoords{
+					CenterX:    currentobj.CenterX,
+					CenterY:    currentobj.CenterY,
+					Confidence: currentobj.confidence,
+				})
+
+				tmpStruct := PreviousFrameObject{
+					ObjectID:   vehicleIDIndex,
+					ClassID:    currentobj.ClassID,
+					CenterX:    currentobj.CenterX,
+					CenterY:    currentobj.CenterY,
+					confidence: currentobj.confidence,
+					TagCounter: 0,
+					tagged:     true,
+				}
+
+				previousFrameData = append(previousFrameData, tmpStruct)
+
+				// In the end, Increment index for next vehicle ID
+				vehicleIDIndex++
+			}
 		}
+		// Increment if tagged and reset tag status (SUCCESS_CASE handled already)
+		for idx, prevobj := range previousFrameData {
+			if prevobj.tagged {
+				previousFrameData[idx].TagCounter += params.Upvote
+			} else {
+				previousFrameData[idx].TagCounter += params.Downvote
+			}
+			previousFrameData[idx].tagged = false
+		}
+
+		// Eliminate any entry which was not tagged recently
+		previousFrameData, _ = Filter02(previousFrameData, params.EliminateThreshold)
+
+		// Add frame record to archive
+		theArchive = append(theArchive, customArchive{
+			FrameID:     i,
+			FrameRecord: previousFrameData,
+		})
+	}
+
+	// Ensure all output paths exist...
+	if _, err := os.Stat("./outputnew"); os.IsNotExist(err) {
+		os.Mkdir("./outputnew", os.ModeDir)
+	}
+
+	// Write data to file
+	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
+		ioutil.WriteFile("./outputnew/yatta.json", jsonString, 0644)
 	}
 }

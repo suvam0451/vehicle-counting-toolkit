@@ -90,8 +90,22 @@ type ModelParameters struct {
 	EliminateThreshold int
 }
 
-// Filters struct array for minimum threshold value
-func filter(vs []objectHistory, threshold int) ([]objectHistory, []objectHistory) {
+// Filter : Filters struct array for minimum threshold value
+func Filter02(vs []PreviousFrameObject, threshold int) ([]PreviousFrameObject, []PreviousFrameObject) {
+	accepted := make([]PreviousFrameObject, 0)
+	rejected := make([]PreviousFrameObject, 0)
+	for _, v := range vs {
+		if v.TagCounter > threshold {
+			accepted = append(accepted, v)
+		} else {
+			rejected = append(rejected, v)
+		}
+	}
+	return accepted, rejected
+}
+
+// Filter : Filters struct array for minimum threshold value
+func Filter(vs []objectHistory, threshold int) ([]objectHistory, []objectHistory) {
 	accepted := make([]objectHistory, 0)
 	rejected := make([]objectHistory, 0)
 	for _, v := range vs {
@@ -235,7 +249,7 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 		}
 
 		// Eliminate any entry which was not tagged recently
-		previousFrameData, _ = filter(previousFrameData, params.EliminateThreshold)
+		previousFrameData, _ = Filter(previousFrameData, params.EliminateThreshold)
 
 		// Add frame record to archive
 		theArchive = append(theArchive, archiveRecord{
