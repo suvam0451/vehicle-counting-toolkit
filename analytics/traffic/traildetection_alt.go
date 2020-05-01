@@ -203,4 +203,11 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath string)
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
 		ioutil.WriteFile("./outputnew/yatta.json", jsonString, 0644)
 	}
+
+	// Test (pruned data - at least 10 frames) --> Noise
+	accepted, _ := PruneFalsePositives(perVehicleTrack, 5)
+	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
+		vechicleDataPath := "test_veh_05.json"
+		ioutil.WriteFile("./outputnew/"+vechicleDataPath, jsonString, 0644)
+	}
 }
