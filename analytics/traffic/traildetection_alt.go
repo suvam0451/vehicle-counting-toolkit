@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sync"
 )
@@ -60,57 +61,95 @@ type CompactCoords struct {
 // DetectTrailCustom : I am modifying the codebase for more compact data format
 func DetectTrailCustom(inputpath string, params ModelParameters) {
 
-	reA := regexp.MustCompile(`^A_2_[0-9]_02\.json$`)
-	// reB := regexp.MustCompile(`^B_2_[0-9]_02\.json$`)
-	// reC := regexp.MustCompile(`^C_2_[0-9]_02\.json$`)
-	// reF := regexp.MustCompile(`^F_2_[0-9]_02\.json$`)
-	// reG := regexp.MustCompile(`^G_2_[0-9]_02\.json$`)
-
-	// ounter := 1
-	var inputfilespath []string
-	// var inputfilesname []string
 	var wg sync.WaitGroup
 
-	// Error already handled above
-	filepath.Walk(inputpath,
-		func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() == false && reA.MatchString(info.Name()) {
-				inputfilespath = append(inputfilespath, path)
-				// inputfilesname = append(inputfilesname, info.Name())
-			}
-			return nil
-		})
+	// regex groups
+	reA := regexp.MustCompile(`^A_2_[0-9]_02\.json$`)
+	reB := regexp.MustCompile(`^B_2_[0-9]_02\.json$`)
+	reD := regexp.MustCompile(`^D_2_[0-9]_02\.json$`)
+	reF := regexp.MustCompile(`^F_2_[0-9]_02\.json$`)
+	reG := regexp.MustCompile(`^G_2_[0-9]_02\.json$`)
+	var regexArray = []*regexp.Regexp{reA, reB, reD, reF, reG}
+	var outputPath = []string{"A", "B", "D", "F", "G"}
 
-	// Gnerate a single object from segmented files
-	var SourceObject CustomFrameData
-	for _, file := range inputfilespath {
-		var tmpData CustomFrameData
-		if openfile, err := os.Open(file); err == nil {
-			byteValue, _ := ioutil.ReadAll(openfile)
-			if err := json.Unmarshal(byteValue, &tmpData); err == nil {
-				SourceObject = append(SourceObject, tmpData...)
+	for i, regex := range regexArray {
+		// ounter := 1
+		var inputfilespath []string
+
+		// Error already handled above
+		filepath.Walk(inputpath,
+			func(path string, info os.FileInfo, err error) error {
+				if info.IsDir() == false && regex.MatchString(info.Name()) {
+					inputfilespath = append(inputfilespath, path)
+					// inputfilesname = append(inputfilesname, info.Name())
+				}
+				return nil
+			})
+
+		// Gnerate a single object from segmented files
+		var SourceObject CustomFrameData
+		for _, file := range inputfilespath {
+			var tmpData CustomFrameData
+			if openfile, err := os.Open(file); err == nil {
+				byteValue, _ := ioutil.ReadAll(openfile)
+				if err := json.Unmarshal(byteValue, &tmpData); err == nil {
+					SourceObject = append(SourceObject, tmpData...)
+				}
 			}
 		}
+
+		// Multi-threaded block
+		wg.Add(1)
+		go func(data CustomFrameData, param ModelParameters, outpath, outfile string) {
+			runAnalysis(SourceObject, params, "outputnew", outfile)
+			wg.Done()
+		}(SourceObject, params, "outputnew", outputPath[i])
 	}
 
-	// Write data to file
-	if jsonString, err := json.MarshalIndent(SourceObject, "", " "); err == nil {
-		ioutil.WriteFile("./outputnew/source.json", jsonString, 0644)
-	}
-
-	runAnalysis(SourceObject, params, "outputnew")
 	wg.Wait()
 }
 
-func runAnalysis(source CustomFrameData, params ModelParameters, outpath string) {
+// FindIntInSlice takes a slice and looks for an element in it. If found it will
+// return it's key, otherwise it will return -1 and a bool of false.
+func FindIntInSlice(slice []int, val int) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
+func itemExists(arrayType interface{}, item interface{}) bool {
+	arr := reflect.ValueOf(arrayType)
+
+	if arr.Kind() != reflect.Array {
+		panic("Invalid data-type")
+	}
+
+	for i := 0; i < arr.Len(); i++ {
+		if arr.Index(i).Interface() == item {
+			return true
+		}
+	}
+	return false
+}
+
+func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfile string) {
 	var previousFrameData []PreviousFrameObject
 	var theArchive []customArchive
 	var perVehicleTrack trackArchive
 	var vehicleIDIndex int = 0
+	var acceptedIDs = []int{2, 3, 5, 7}
 
 	for i, frame := range source {
 		for _, currentobj := range frame.Objects {
 			tagged := false
+
+			// Skip for mismatch with following classes : "car", "motorbike", "bus", "truck"
+			if !FindIntInSlice(acceptedIDs, currentobj.ClassID) {
+				continue
+			}
 
 			for idx, prevobj := range previousFrameData {
 				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged && !previousFrameData[idx].tagged {
@@ -139,10 +178,6 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath string)
 
 			// Handle if object was untagged (new object detected)
 			if !tagged {
-				// SKIP : "traffic_light": 9, "person" : 0
-				if currentobj.ClassID == 9 || currentobj.ClassID == 0 {
-					continue
-				}
 
 				// TAG_FAILURE case : Add entry for new vehicleID in list of vehicle tracks
 				perVehicleTrack = append(perVehicleTrack, VehicleTracks{
@@ -201,13 +236,12 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath string)
 
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
-		ioutil.WriteFile("./outputnew/yatta.json", jsonString, 0644)
+		ioutil.WriteFile("./outputnew/veh_"+outfile+".json", jsonString, 0644)
 	}
 
 	// Test (pruned data - at least 10 frames) --> Noise
 	accepted, _ := PruneFalsePositives(perVehicleTrack, 5)
 	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
-		vechicleDataPath := "test_veh_05.json"
-		ioutil.WriteFile("./outputnew/"+vechicleDataPath, jsonString, 0644)
+		ioutil.WriteFile("./outputnew/veh_"+outfile+"_c.json", jsonString, 0644)
 	}
 }

@@ -18,11 +18,16 @@ plt.xlabel("Plot Number")
 plt.ylabel("Plot points")
 plt.xlim(0,1)
 plt.ylim(1,0)
+# plt.gca().invert_yaxis()
+
 # matplotlib axis/bg settings
 img = cv2.imread("./images/A.jpg")
 
 bins = np.fromiter((i*10 for i in range(100)), dtype="float32")
 
+# Setup sub-plot
+fig, ax = plt.subplots()
+plt.imshow(img, extent=[0, 1, 1, 0])
 
 FRAME_COUNTERS = np.zeros((0, 1), dtype=np.float)
 
@@ -38,7 +43,8 @@ with open(join("./input","test_veh_05.json"), "r") as f:
                         [[coordinates["center_x"],
                             coordinates["center_y"]]], axis=0)
         # print(FRAME_COUNTERS)
-        plt.scatter(COORD_LIST[:,0:1], COORD_LIST[:,1:2])
+        ax.scatter(COORD_LIST[:,0:1], COORD_LIST[:,1:2])
+        # plt.scatter(COORD_LIST[:,0:1], COORD_LIST[:,1:2])
 
 plt.savefig(join("./output", "output.png"))
 plt.show()
