@@ -1,9 +1,17 @@
 """Test file to visualize detected trail lines from videos"""
 
+# Usage --> python Trackviz.py 3
+#     0 --> Amtala
+#     1 --> Bamoner
+#     2 --> Diamond
+#     3 --> Fotepore
+#     4 --> Gangasagar
+
 import cv2
 import json
 import math
 import time
+import sys
 import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
@@ -41,8 +49,13 @@ json_files_frames = np.asarray([
     "./inputnew/veh_G.json"
 ])
 
-image_to_open = images[3]
-file_to_open = json_files_track[3]
+## Modify 
+targetindex = 2
+## Primary variables
+image_to_open = images[int(sys.argv[1])]
+file_to_open = json_files_track[int(sys.argv[1])]
+## ----------------------------------------------
+
 
 img = cv2.imread(image_to_open)
 bins = np.fromiter((i*10 for i in range(100)), dtype="float32")
@@ -69,7 +82,9 @@ with open(file_to_open, "r") as f:
         ax.scatter(COORD_LIST[:, 0:1], COORD_LIST[:, 1:2])
         # plt.scatter(COORD_LIST[:,0:1], COORD_LIST[:,1:2])
 
+# plt.savefig(join("./output", "output.png"))
 plt.savefig(join("./output", "output.png"))
+
 plt.show()
 plt.clf()
 plt.hist(FRAME_COUNTERS, bins, histtype="bar", rwidth=0.75)

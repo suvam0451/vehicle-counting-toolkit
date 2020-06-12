@@ -10,8 +10,8 @@ import (
 	"sync"
 )
 
-// Holds history of all past frames
-type customArchive struct {
+// FrameTaggedArchive : Holds history of all past frames
+type FrameTaggedArchive struct {
 	FrameID     int                   `json:"frame_id"`
 	FrameRecord []PreviousFrameObject `json:"frames"`
 }
@@ -137,7 +137,7 @@ func itemExists(arrayType interface{}, item interface{}) bool {
 
 func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfile string) {
 	var previousFrameData []PreviousFrameObject
-	var theArchive []customArchive
+	var theArchive []FrameTaggedArchive
 	var perVehicleTrack trackArchive
 	var vehicleIDIndex int = 0
 	var acceptedIDs = []int{2, 3, 5, 7}
@@ -223,7 +223,7 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfil
 		previousFrameData, _ = Filter02(previousFrameData, params.EliminateThreshold)
 
 		// Add frame record to archive
-		theArchive = append(theArchive, customArchive{
+		theArchive = append(theArchive, FrameTaggedArchive{
 			FrameID:     i,
 			FrameRecord: previousFrameData,
 		})

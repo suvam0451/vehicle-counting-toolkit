@@ -12,13 +12,15 @@ from os import listdir
 from os.path import isfile, join
 from numba import jit, float32, cuda
 import cuda_lib as culib
+import matplotlib.lines as mlines
 
 style.use("ggplot")
 
+# Parameter list
+SEGMENTS = 8  # Number of segments we are dividing to
 
-# poggers = np.arange(1000)
-# TPB = 32  # Threads per block
-# BPG = (poggers.size + TPB - 1)  # Blocks per grid
+
+# COORD_LIST, TAG_DATA, REGION_DATA
 
 @cuda.jit
 def pick_segment(inArray, numSlice, SIZEY, outPartition):
@@ -41,7 +43,7 @@ def pick_segment(inArray, numSlice, SIZEY, outPartition):
             outPartition[pos] = idx
             return
 
-# COORD_LIST, TAG_DATA, REGION_DATA
+
 @cuda.jit
 def greedy_pick(coord_list, tag_data, region_data, num_slice, intensity_param):
     """
@@ -64,6 +66,7 @@ def greedy_pick(coord_list, tag_data, region_data, num_slice, intensity_param):
     # Initialization
     thread_object = coord_list[pos]
     tab_object = tag_data[pos]
+    # region_data[pos].effect_power, region_data[pos].region
     region_object = region_data[pos]
 
     normalized_counter = min(max(tab_object[0] / intensity_param, 0.0), 1.0)
@@ -94,8 +97,6 @@ SHAPE = (IMG.shape[1], IMG.shape[0])
 def screen_to_pixel(coords, size):
     return (math.floor(coords[0]*size[0]), math.floor(coords[1]*size[1]))
 
-# Decalarations
-
 # Struct --> XCoord, YCoord, TagNum, ColorStrength, Segment
 # MEGALIST = np.zeros((0, 1), dtype='float64, float64, int16, int16, uint8')
 
@@ -114,7 +115,7 @@ MEGALIST = np.zeros((0, 5), dtype=np.float)
 afk = np.array([[0, 0]])
 
 
-# get all intermediate json files
+# get all json files in "intermediate" folder
 inputFileList = [f for f in listdir(
     "./intermediate") if isfile(join("./intermediate", f))]
 
@@ -124,6 +125,7 @@ plt.gca().invert_yaxis()
 
 #
 for inputfile in inputFileList:
+    print(inputfile)
     with open(join("./intermediate", inputfile), "r") as f:
         distros_dict = json.load(f)
         for frame in distros_dict:
@@ -148,14 +150,12 @@ for inputfile in inputFileList:
     TPB = 32
     BPG = (TAG_DATA.size + (TPB - 1))
 
+    # index #1 stores strength of trail, index #2 stores the segment to which the point belongs
     REGION_DATA = np.zeros((COORD_LIST.shape[0], 2), dtype=np.uint8)
 
-    # Number of segments we are dividing to
-    segments = 8
-
-    # CUDA version
+    # CUDA version (fills REGION_DATA)
     greedy_pick[BPG, TPB](COORD_LIST, TAG_DATA, REGION_DATA,
-                          segments, 256.0)  # Call the CUDA function
+                          SEGMENTS, 256.0)  # Call the CUDA function
 
     # print(REGION_DATA[95:100])
 
@@ -170,31 +170,10 @@ for inputfile in inputFileList:
         if coloridx == np.iinfo(np.uint8).max:
             continue
         plt.scatter(point[0], point[1],
-                    marker="o", s=0.2, c=colors[REGION_DATA[idx][0]], linewidths=5)
+                    marker="o", s=0.1, c=colors[REGION_DATA[idx][0]], linewidths=5)
 
     X_COORD_LIST = COORD_LIST[:, 0:1]
     Y_COORD_LIST = COORD_LIST[:, 1:2]
-
-    # Boolean mask
-    # mask =  COORD_LIST[:, 1] > 0.5
-
-    # print(mask)
-
-    # condition = Y_COORD_LIST <  0.5
-    # condition = COORD_LIST[:, 1:2] < 0.5
-    # print(COORD_LIST[condition])
-    for i in range(segments):
-        mask = REGION_DATA[:, 0] == i
-        sampled_coords = COORD_LIST[mask, :]
-
-        # Classifier on ROI
-        clf = KMeans()
-        clf.fit(sampled_coords)
-        centroids = clf.cluster_centers_
-        print(centroids)
-        for j in range(centroids.shape[0]):
-            plt.scatter(centroids[j][0], centroids[j][1],
-                        marker="*", s=36, c="w", linewidths=5)
 
     #     print(condition)
     #     choices = [X_COORD_LIST]
@@ -218,6 +197,26 @@ for inputfile in inputFileList:
 
     # d_partition.to_host(stream)
     # stream.synchronize()
+
+    # Get the clusters for the current segment. Then draw on top of the image.
+    for i in range(SEGMENTS):
+        mask = REGION_DATA[:, 0] == i  # MASK_INFO --> falls under segment
+        sampled_coords = COORD_LIST[mask, :]
+
+        # Classifier on simplified ROI ------------------------> (TODO: Needs adjustments)
+        clf = KMeans()
+        clf.fit(sampled_coords)
+        centroids = clf.cluster_centers_
+        # ---------------------------------------------------------------
+
+        # Connecting layers based on closeness (TODO: Complete the cpde)
+        for j in range(centroids.shape[0]):
+            plt.scatter(centroids[j][0], centroids[j][1],
+                        marker="*", s=36, c="w", linewidths=5)
+        # mlines.
+
+    # Erase the graphs for the next round
+    plt.clf()
 
     # Save the image to output folder by same name
     filename = inputfile[:len(inputfile)-5]

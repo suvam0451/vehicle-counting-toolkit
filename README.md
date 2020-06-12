@@ -4,7 +4,7 @@ Poring my traffic detection algorithm codes to golang.
 
 ## Goals
 
-This project is aimed towards creation of feasible real-time solutions for determining traffic flow characteristics and 
+This project is aimed towards creation of feasible real-time solutions for determining traffic flow characteristics and
 statistics data generation using available lane information and general day-to-day vehicle behavior.
 
 The goals of this project are to come up with that is to real-time
@@ -16,33 +16,32 @@ The goals of this project are to come up with that is to real-time
 
 In the earliest phases, we should be able to extract information from roads such as these categorized by :-
 
-- Clearly delineated lanes *(With all vehicles respecting the traffic)*
+- Clearly delineated lanes _(With all vehicles respecting the traffic)_
 - Camera feed is static
 
 ![Ideal road scenario](https://i.imgur.com/gpMsysy.jpg)
 
 ## Approach
 
-
 #### CUDA computation
 
 - We then detect **which segment the points falls to** for a pre-specified number of y-sliced regions.
 
-*The following image, for example shows a 16 part division.*
+_The following image, for example shows a 16 part division._
 
 ![Segment Detection](https://i.imgur.com/Y0sq99i.png?1)
 
-- Next, since we already know the trajectories of vehicles, we can take the corresponding points for a vehicle group *(Applying a K-means clustering, if needed)* 
-and fit the points to a line. We can then join these lines to get an approximation for expected trajectory for a lane.
+- Next, since we already know the trajectories of vehicles, we can take the corresponding points for a vehicle group _(Applying a K-means clustering, if needed)_
+  and fit the points to a line. We can then join these lines to get an approximation for expected trajectory for a lane.
 
 We have a few strategies for how we connect line segments generated from the previous steps.
 
 1. Taking the centroids of lines in each segment and joining their mid-points
 2. Attempt to join the ends of lines in each segment by equaitable shift in angles for each line,
-with a degree of relaxation.
+   with a degree of relaxation.
 3. Do not attempt to align the ends of lines at all. The calculations will remain true to the input setof data points.
- 
-### Libraries:  
+
+### Libraries:
 
 #### Darknet
 
@@ -62,7 +61,7 @@ You can use this to slice images from videos or tag images for genearting models
      <summary>The CUDA library written in python using numba</summary>
 
 - "python" folder has all the libraries along-with a sample main.py file to demonstrate all the algorithms.
-- Note that you should **use miniconda/anaconda** to get your libraries so that no version mismatch errors occur. 
+- Note that you should **use miniconda/anaconda** to get your libraries so that no version mismatch errors occur.
 
 This works with anaconda/miniconda.
 
@@ -71,11 +70,12 @@ conda create -n yourenvname python=x.x anaconda
 conda install numba opencv matplotlib
 ```
 
-If you prefer vanilla python with pip install, then here is the list of packages used *(I used python3.7)*.
+If you prefer vanilla python with pip install, then here is the list of packages used _(I used python3.7)_.
 
 ```
 pip install opencv numpy matplotlib numba
 ```
+
 </details>
 
 ### Instruction for developers
@@ -83,14 +83,12 @@ pip install opencv numpy matplotlib numba
 <details>
      <summary>Preliminary: Bulk generation of image slices / list generation</summary>
 
-
 **NOTE: All the paths mentioned here are relative to the /bin folder**
 
 - Start with the /bin folder. Copy over images to /bin/input folder
 - Run the `GenerateImages.ps1` powershell file. This will create an /intermediate folder and insert **.txt files** with lists of generated image per video file in /input folder.
-The images themselves will be outputted to /imagesets folder.
+  The images themselves will be outputted to /imagesets folder.
 - Run the `DarknetProcess.ps1` powershell file. This will create an /output folder and start inserting **.json files** with detection data per video file in /input folder.
-
 
 ### With powershell
 
@@ -107,6 +105,7 @@ pwsh
 .\GenerateImages.ps1
 .\DarknetProcess.ps1
 ```
+
 </details>
 
 <details>
@@ -117,6 +116,7 @@ Before running the CUDA scripts, we have to setup our CUDA environments and inst
 After following that guide, depending on the shell you are using, activate the conda environment and run the `matplotTag.py` script from /visualizers folder.
 
 ### Powershell
+
 ```powershell
 powershell
 conda activate traffic_tools
@@ -124,6 +124,7 @@ python matplotTag.py
 ```
 
 ### Powershell Core
+
 ```powershell
 pwsh
 conda activate traffic_tools
@@ -131,6 +132,7 @@ python matplotTag.py
 ```
 
 ### CMD
+
 ```cmd
 conda activate traffic_tools
 python matplotTag.py
@@ -141,9 +143,14 @@ python matplotTag.py
 <details>
      <summary>CUDA scripts: </summary>
 
-1. Copy the `yolo_mark.exe` in /bin folder to directory with your video files. The image sampling can be done by the following command. An interval of 10 is recommended for no GPU and you can go as less as 4 if you have a  GPU and videos < 5min length
+1. Copy the `yolo_mark.exe` in /bin folder to directory with your video files. The image sampling can be done by the following command. An interval of 10 is recommended for no GPU and you can go as less as 4 if you have a GPU and videos < 5min length
 
 ```
 yolo_mark.exe outpath cap_video videofile.mp4 10
 ```
-</details>   
+
+</details>
+
+## Libraries and licensing
+
+This repo uses binaries produced by a lot of third-party projects. Here is the list. If you use this repository for anything, make sure to go into these repositories
