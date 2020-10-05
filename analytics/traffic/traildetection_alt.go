@@ -178,7 +178,6 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfil
 
 			// Handle if object was untagged (new object detected)
 			if !tagged {
-
 				// TAG_FAILURE case : Add entry for new vehicleID in list of vehicle tracks
 				perVehicleTrack = append(perVehicleTrack, VehicleTracks{
 					VehicleID:  vehicleIDIndex,
@@ -230,18 +229,18 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfil
 	}
 
 	// Ensure all output paths exist...
-	if _, err := os.Stat("./outputnew"); os.IsNotExist(err) {
-		os.Mkdir("./outputnew", os.ModeDir)
+	if _, err := os.Stat("./out_traildetection_alt"); os.IsNotExist(err) {
+		os.Mkdir("./out_traildetection_alt", os.ModeDir)
 	}
 
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
-		ioutil.WriteFile("./outputnew/veh_"+outfile+".json", jsonString, 0644)
+		ioutil.WriteFile("./out_traildetection_alt/veh_"+outfile+".json", jsonString, 0644)
 	}
 
 	// Test (pruned data - at least 10 frames) --> Noise
 	accepted, _ := PruneFalsePositives(perVehicleTrack, 5)
 	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
-		ioutil.WriteFile("./outputnew/veh_"+outfile+"_c.json", jsonString, 0644)
+		ioutil.WriteFile("./out_traildetection_alt/veh_"+outfile+"_c.json", jsonString, 0644)
 	}
 }

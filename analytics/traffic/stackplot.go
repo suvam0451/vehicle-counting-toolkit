@@ -34,15 +34,21 @@ type FrameObjectNew struct {
 
 // GenerateStackplot : Generates stackplot
 func GenerateStackplot() {
+	// folder with output files from "traildetection_alt" command
+	basedir := "./out_traildetection_alt"
+	outputDir := "./out_stackplot"
 
-	inputfiles := []string{"outputnew/veh_A.json",
-		"outputnew/veh_B.json",
-		"outputnew/veh_D.json",
-		"outputnew/veh_F.json",
-		"outputnew/veh_G.json"}
+	// Create folder if not exists
+	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+		os.Mkdir(outputDir, os.ModeDir)
+	}
 
+	inputfiles := []string{basedir + "/veh_A.json", basedir + "/veh_B.json",
+	basedir + "/veh_D.json", basedir + "/veh_F.json", basedir + "/veh_G.json"}
+
+	numFiles := len(inputfiles)
 	// Iterate over input files
-	for _, inputfile := range inputfiles {
+	for i, inputfile := range inputfiles {
 		if jsonFile, err := os.Open(inputfile); err == nil {
 			// These need to be unique per file
 			var data []FrameTaggedData
@@ -52,7 +58,10 @@ func GenerateStackplot() {
 			byteValue, _ := ioutil.ReadAll(jsonFile)
 			json.Unmarshal(byteValue, &data)
 
-			fmt.Println("Everything OK. Wait for program to exit...")
+			// print status to terminal
+			outStr := fmt.Sprintf("Processing... %d/%d files", i + 1, numFiles)
+			fmt.Println(outStr)
+
 			// Iterate frames
 			for _, framedata := range data {
 				var tmp StackplotStruct
@@ -68,10 +77,11 @@ func GenerateStackplot() {
 				}
 				outdata = append(outdata, tmp)
 			}
+
 			str := strings.TrimSuffix(_stat.Name(), filepath.Ext(_stat.Name()))
-			// filepath.
+			// output filepath
 			file, _ := json.MarshalIndent(outdata, "", " ")
-			_ = ioutil.WriteFile("stackplot/"+str+"_stackplot.json", file, 0644)
+			_ = ioutil.WriteFile("out_stackplot/"+str+"_stackplot.json", file, 0644)
 		}
 	}
 

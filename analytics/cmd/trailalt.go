@@ -23,13 +23,17 @@ import (
 // trailaltCmd represents the trailalt command
 var trailaltCmd = &cobra.Command{
 	Use:   "trailalt",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Alternate algorithm for generating trails.",
+	Long: `
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+
+The following default configuration is applied. Use a config file to override.
+------------------------------------
+Positive Reinforcement 		: 2 points
+Negative Reinforcement		: 1 points (negative)
+X threshold(default)		: 0.00075
+Y threshold(default)		: 0.00075
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		traffic.DetectTrailCustom("inputnew", traffic.ModelParameters{
 			Upvote:             2,
