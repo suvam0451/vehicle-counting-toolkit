@@ -141,6 +141,16 @@ python matplotTag.py
 </details>
 
 <details>
+     <summary>conda setup </summary>
+
+```sh
+conda -n py38 python=3.8
+conda activate py38
+conda install numba matplotlib scikit-learn opencv
+```
+
+</details>
+<details>
      <summary>CUDA scripts: </summary>
 
 1. Copy the `yolo_mark.exe` in /bin folder to directory with your video files. The image sampling can be done by the following command. An interval of 10 is recommended for no GPU and you can go as less as 4 if you have a GPU and videos < 5min length

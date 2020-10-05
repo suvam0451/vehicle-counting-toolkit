@@ -12,6 +12,7 @@ import json
 import math
 import time
 import sys
+import os
 import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
@@ -19,6 +20,7 @@ from sklearn.cluster import KMeans
 from os import listdir
 from os.path import isfile, join
 from numba import jit, float32, cuda
+
 
 VIDEO_FPS = 25.0  # float
 SAMPLE_INTERVAL = 5
@@ -31,9 +33,16 @@ SAMPLE_INTERVAL = 5
 # "veh_G_stackplot.json"
 # ]
 
+
+inputdir = "./input_stackplot"
+outputdir = "./out_stackplot"
+
+# Make directory if not exist
+if not os.path.exists(outputdir):
+    os.makedirs(outputdir)
+
 # get all json files in target folder
-fileList = [f for f in listdir(
-    "./stackplot") if isfile(join("./stackplot", f))]
+fileList = [f for f in listdir(inputdir) if isfile(join(inputdir, f))]
 
 # x = [1, 2, 3, 4, 5]
 
@@ -49,7 +58,7 @@ for inputfile in fileList:
     y3 = np.zeros(0, dtype=np.int)  # Truck
     counter = 0.0
 
-    with open(join("./stackplot", inputfile), "r") as f:
+    with open(join(inputdir, inputfile), "r") as f:
         distros_dict = json.load(f)
 
         for entry in distros_dict:
@@ -85,7 +94,7 @@ for inputfile in fileList:
     ax1.legend(loc='upper left')
     # Size and save
     fig.set_size_inches(16, 8, forward=True)  # play with size
-    plt.savefig(join("./stackplots", filename + "_02.png"))
+    plt.savefig(join(outputdir, filename + "_02.png"))
     ax2.cla()
 
     # Clear figure for next round

@@ -28,33 +28,28 @@ plt.xlim(0, 1)
 plt.ylim(1, 0)
 # plt.gca().invert_yaxis()
 
+inputdir = "./out_traildetection_alt"
+outputdir = "./out_trackviz"
+
 # matplotlib axis/bg settings
 images = np.asarray(["../images/Sample_Amtala.jpg",
                      "../images/Sample_Bamoner.jpg",
                      "../images/Sample_Diamond.jpg",
                      "../images/Sample_Fotepore.jpg",
                      "../images/Sample_Gangasagar.jpg"])
-json_files_track = np.asarray([
-    "./inputnew/veh_A_c.json",
-    "./inputnew/veh_B_c.json",
-    "./inputnew/veh_D_c.json",
-    "./inputnew/veh_F_c.json",
-    "./inputnew/veh_G_c.json"
-])
-json_files_frames = np.asarray([
-    "./inputnew/veh_A.json",
-    "./inputnew/veh_B.json",
-    "./inputnew/veh_D.json",
-    "./inputnew/veh_F.json",
-    "./inputnew/veh_G.json"
-])
 
-## Modify 
+json_files_track = np.asarray([inputdir + "/veh_A_c.json", inputdir + "/veh_B_c.json",
+                               inputdir + "/veh_D_c.json", inputdir + "/veh_F_c.json", inputdir + "/veh_G_c.json"])
+
+json_files_frames = np.asarray([inputdir + "/veh_A.json", inputdir + "/veh_B.json",
+                                inputdir + "/veh_D.json", inputdir + "/veh_F.json", inputdir + "/veh_G.json"])
+
+# Modify
 targetindex = 2
-## Primary variables
+# Primary variables
 image_to_open = images[int(sys.argv[1])]
 file_to_open = json_files_track[int(sys.argv[1])]
-## ----------------------------------------------
+# ----------------------------------------------
 
 
 img = cv2.imread(image_to_open)
@@ -83,12 +78,12 @@ with open(file_to_open, "r") as f:
         # plt.scatter(COORD_LIST[:,0:1], COORD_LIST[:,1:2])
 
 # plt.savefig(join("./output", "output.png"))
-plt.savefig(join("./output", "output.png"))
+plt.savefig(join(outputdir, "output.png"))
 
 plt.show()
 plt.clf()
 plt.hist(FRAME_COUNTERS, bins, histtype="bar", rwidth=0.75)
-plt.savefig(join("./output", "track_length.png"))
+plt.savefig(join(outputdir, "track_length.png"))
 # print(COORD_LIST[:,0:1])
 
 # secarr = np.asarray(arr[0]["objects"][1])

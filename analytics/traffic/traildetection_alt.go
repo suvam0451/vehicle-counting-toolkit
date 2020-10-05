@@ -135,12 +135,13 @@ func itemExists(arrayType interface{}, item interface{}) bool {
 	return false
 }
 
+/* For every alternate frame, compares to the previous frame and classifies objects that may be idle/moving with configurable accuracy */
 func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfile string) {
 	var previousFrameData []PreviousFrameObject
 	var theArchive []FrameTaggedArchive
 	var perVehicleTrack trackArchive
 	var vehicleIDIndex int = 0
-	var acceptedIDs = []int{2, 3, 5, 7}
+	var acceptedIDs = []int{2, 3, 5, 7} // car, motorbike, bus, truck
 
 	for i, frame := range source {
 		for _, currentobj := range frame.Objects {
