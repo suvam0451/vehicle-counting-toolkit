@@ -1,9 +1,11 @@
 """Entry point."""
 
+import sys
 import cv2
 import json
 import math
 import time
+import os
 import matplotlib.pyplot as plt
 from matplotlib import style
 import numpy as np
@@ -18,9 +20,12 @@ style.use("ggplot")
 
 # Parameter list
 SEGMENTS = 8  # Number of segments we are dividing to
+outputPath = "./out_cudapath"
 
+# Make sure output directories exist
+if os.path.exists(outputPath) == False:
+    os.mkdir(outputPath)
 
-# COORD_LIST, TAG_DATA, REGION_DATA
 
 @cuda.jit
 def pick_segment(inArray, numSlice, SIZEY, outPartition):
@@ -123,9 +128,18 @@ inputFileList = [f for f in listdir(
 plt.gca().invert_yaxis()
 
 
+print("Reminder for optional arguments --> skip_plot")
+
 #
 for inputfile in inputFileList:
-    print(inputfile)
+    # The first file is too large
+    if inputfile == "input_02_01.json":
+        print("Skipping..." + inputfile)
+        pass
+
+    print("filename: " + inputfile)
+    split_0 = time.perf_counter()
+
     with open(join("./intermediate", inputfile), "r") as f:
         distros_dict = json.load(f)
         for frame in distros_dict:
@@ -146,6 +160,10 @@ for inputfile in inputFileList:
                 #                     uobject["relative_coordinates"]["center_y"])
                 # afk = np.append(afk, [screen_to_pixel(screen_coordinates, SHAPE)], axis=0)
 
+    # checkpoint
+    split_1 = time.perf_counter()
+    print("Initialized array in " + "{:.2f}".format(split_1 -
+                                                    split_0) + " seconds.")
     # All arrays have same size
     TPB = 32
     BPG = (TAG_DATA.size + (TPB - 1))
@@ -156,24 +174,36 @@ for inputfile in inputFileList:
     # CUDA version (fills REGION_DATA)
     greedy_pick[BPG, TPB](COORD_LIST, TAG_DATA, REGION_DATA,
                           SEGMENTS, 256.0)  # Call the CUDA function
-
-    # print(REGION_DATA[95:100])
-
-    colors = 1000 * ['g', 'r', 'c', 'b', 'k', 'm', 'y']
-
     #  Non CUDA version
     # lazy_pick(COORD_LIST, TAG_DATA, REGION_DATA,
     #           8, 256.0)  # Call the non-CUDA function
 
-    for idx, point in enumerate(COORD_LIST, start=0):
-        coloridx = REGION_DATA[idx][0]
-        if coloridx == np.iinfo(np.uint8).max:
-            continue
-        plt.scatter(point[0], point[1],
-                    marker="o", s=0.1, c=colors[REGION_DATA[idx][0]], linewidths=5)
+    # checkpoint
+    split_2 = time.perf_counter()
+    print("CUDA function executed in " + "{:.2f}".format(split_2 -
+                                                         split_1) + " seconds.")
 
-    X_COORD_LIST = COORD_LIST[:, 0:1]
-    Y_COORD_LIST = COORD_LIST[:, 1:2]
+    if len(sys.argv) > 1 and sys.argv[1] == "skip_plot":
+        print("Graph plotting skipped.")
+        split_3 = time.perf_counter()
+        pass
+    else:
+        colors = 1000 * ['g', 'r', 'c', 'b', 'k', 'm', 'y']
+
+        for idx, point in enumerate(COORD_LIST, start=0):
+            coloridx = REGION_DATA[idx][0]
+            if coloridx == np.iinfo(np.uint8).max:
+                continue
+            plt.scatter(point[0], point[1],
+                        marker="o", s=0.1, c=colors[REGION_DATA[idx][0]], linewidths=5)
+
+        X_COORD_LIST = COORD_LIST[:, 0:1]
+        Y_COORD_LIST = COORD_LIST[:, 1:2]
+
+        # checkpoint
+        split_3 = time.perf_counter()
+        print("Graph plotted in " + "{:.2f}".format(split_3 -
+                                                    split_2) + " seconds.")
 
     #     print(condition)
     #     choices = [X_COORD_LIST]
@@ -218,6 +248,11 @@ for inputfile in inputFileList:
     # Erase the graphs for the next round
     plt.clf()
 
+    # checkpoint
+    split_4 = time.perf_counter()
+    print("Classifier executed in: " + "{:.2f}".format(split_4 -
+                                                       split_3) + " seconds.")
+
     # Save the image to output folder by same name
     filename = inputfile[:len(inputfile)-5]
-    plt.savefig(join("./output", filename + ".png"))
+    plt.savefig(join(outputPath, filename + ".png"))

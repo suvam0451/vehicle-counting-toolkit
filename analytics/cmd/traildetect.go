@@ -1,18 +1,4 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/*Package cmd is entry point for the original algorithm */
 package cmd
 
 import (
@@ -24,9 +10,28 @@ import (
 var traildetectCmd = &cobra.Command{
 	Use:   "traildetect",
 	Short: "Previous algorithm for generating trails. Use help for detailed information.",
-	Long: ``,
+	Long: `
+	Information
+	----------------
+	  Generates frame-by-frame information for vehicle objects visible (indicated by unique tag ID).
+      This variant is multi-threaded
+
+	Output details
+	-------------
+	  \out_traildetection_alt\veh_A.json      -->		All results with "no pruning"
+	  \out_traildetection_alt\veh_A_c.json    -->		Objects with less than 5 data points are pruned
+  
+  
+	The following default configuration is applied. Use a config file to override.
+	-----------------------------------------------------------
+	  Positive Reinforcement         : 2 points
+	  Negative Reinforcement         : 1 points (negative)
+	  X threshold(default)           : 0.00025
+	  Y threshold(default)           : 0.00025
+	  Elimination threshold          : 0
+	  `,
 	Run: func(cmd *cobra.Command, args []string) {
-		traffic.DetectTrail("./input", traffic.ModelParameters{
+		traffic.DetectTrail("./input_traildetect", traffic.ModelParameters{
 			Upvote:             2,
 			Downvote:           -1,
 			XThreshold:         0.00025,
@@ -38,14 +43,4 @@ var traildetectCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(traildetectCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// traildetectCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// traildetectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

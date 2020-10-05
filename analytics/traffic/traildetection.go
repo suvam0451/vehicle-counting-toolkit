@@ -120,8 +120,6 @@ func Filter(vs []objectHistory, threshold int) ([]objectHistory, []objectHistory
 
 // PruneFalsePositives : Any vehicle trail with < minThreshold number of data will be pruned
 func PruneFalsePositives(archive []VehicleTracks, minThreshold int) (accepted []VehicleTracks, rejected []VehicleTracks) {
-	// accepted := make([]vehicleTracks, 0)
-	// rejected := make([]vehicleTracks, 0)
 	for _, v := range archive {
 		if v.FrameCount > minThreshold {
 			accepted = append(accepted, v)
@@ -156,7 +154,7 @@ func DetectTrail(inputpath string, params ModelParameters) {
 			if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
 				wg.Add(1)
 
-				// Multi-threaded processing of input files
+				// Send structs to separate threads
 				go func(filename string) {
 					detectIndividualTrail(ParsedStruct, params, filename)
 					wg.Done()
@@ -169,11 +167,28 @@ func DetectTrail(inputpath string, params ModelParameters) {
 }
 
 func detectIndividualTrail(data trailData, params ModelParameters, filepath string) {
+	outputDir := "./out_traildetect"
+	// Ensure all output paths exist...
+	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+		os.Mkdir(outputDir, os.ModeDir)
+	}
+
 	var previousFrameData frameRecord
 	var theArchive mainArchive
 	var perVehicleTrack trackArchive
 	var vehicleIDIndex int = 0
+	/*
+		LOGIC
+		----------
+		For each frame, loop over the objects, compare the elements to the previously stored elements.
+		If classes match and the object hasnt been tagged, check the displacement and see if it's under the threshold.
+		Add the item to list.
 
+		If the element is still untagged, then check the classID and insert it as a new key
+
+		Depending on if the element was tagged/untagged, add/remove scores
+		Filter out elements with very low scores
+	*/
 	for i, frame := range data {
 		for _, currentobj := range frame.Objects {
 			tagged := false // will be set to true if object gets assigned to one of the previous frame objects
@@ -258,44 +273,30 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 		})
 	}
 
-	// Ensure all output paths exist...
-	if _, err := os.Stat("./output"); os.IsNotExist(err) {
-		os.Mkdir("./output", os.ModeDir)
-	}
-	if _, err := os.Stat("./intermediate"); os.IsNotExist(err) {
-		os.Mkdir("./intermediate", os.ModeDir)
-	}
-
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
-		ioutil.WriteFile("./intermediate/"+filepath, jsonString, 0644)
+		ioutil.WriteFile(outputDir+"/"+filepath, jsonString, 0644)
 	}
+
+	// The following comments assume, that the sampling was done at 1 frame interval, for a 24 fps stream
 
 	// Write data to file (vehicle track data)
-	if jsonString, err := json.MarshalIndent(perVehicleTrack, "", " "); err == nil {
-		// Filename modified to xyz_vehicles.json
-		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh.json"
-		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
-	}
+	pruneAndWrite(outputDir, filepath, "_veh.json", perVehicleTrack, 0)
 
 	// Test (pruned data - at least 10 frames) --> Noise
-	accepted, _ := PruneFalsePositives(perVehicleTrack, 3)
-	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
-		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh_0.5s.json"
-		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
-	}
+	pruneAndWrite(outputDir, filepath, "_veh_0.5s.json", perVehicleTrack, 3)
 
 	// Test (pruned data - at least 60 frames) --> Half-second
-	accepted, _ = PruneFalsePositives(perVehicleTrack, 6)
-	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
-		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh_1.0s.json"
-		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
-	}
+	pruneAndWrite(outputDir, filepath, "_veh_1.0s.json", perVehicleTrack, 6)
 
-	// Test (pruned data - at least 60 frames) --> Half-second
-	accepted, _ = PruneFalsePositives(perVehicleTrack, 12)
+	// Test (pruned data - at least 60 frames) --> One-second
+	pruneAndWrite(outputDir, filepath, "_veh_2.0s.json", perVehicleTrack, 12)
+}
+
+func pruneAndWrite(outputPath, filepath, suffix string, data trackArchive, pruneParam int) {
+	accepted, _ := PruneFalsePositives(data, pruneParam)
 	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
-		vechicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + "_veh_2.0s.json"
-		ioutil.WriteFile("./intermediate/"+vechicleDataPath, jsonString, 0644)
+		vehicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + suffix
+		ioutil.WriteFile(outputPath+"/"+vehicleDataPath, jsonString, 0644)
 	}
 }

@@ -67,7 +67,8 @@ This works with anaconda/miniconda.
 
 ```batch
 conda create -n yourenvname python=x.x anaconda
-conda install numba opencv matplotlib
+conda install numba opencv matplotlib numpy scikit-learn
+conda install -c anaconda cudatoolkit
 ```
 
 If you prefer vanilla python with pip install, then here is the list of packages used _(I used python3.7)_.

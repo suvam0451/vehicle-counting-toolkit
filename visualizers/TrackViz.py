@@ -20,6 +20,10 @@ from os import listdir
 from os.path import isfile, join
 from numba import jit, float32, cuda
 
+print("This script plots your data points on its respective image")
+print("and additionally outputs a histogram with plot of frequency")
+print("of vehicle object.")
+
 style.use("ggplot")
 plt.title("Tracking distances")
 plt.xlabel("Plot Number")

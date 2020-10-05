@@ -62,6 +62,7 @@ for inputfile in fileList:
         distros_dict = json.load(f)
 
         for entry in distros_dict:
+            # Time in x-axis, frequency in y-axis
             y1 = np.append(y1, [entry["car"]])
             y2 = np.append(y2, [entry["motorbike"]])
             y3 = np.append(y3, [entry["truck"]])
