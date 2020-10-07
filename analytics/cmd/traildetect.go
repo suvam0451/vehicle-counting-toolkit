@@ -13,13 +13,13 @@ var traildetectCmd = &cobra.Command{
 	Long: `
 	Information
 	----------------
-	  Generates frame-by-frame information for vehicle objects visible (indicated by unique tag ID).
+	  Generates "frame-by-frame" information for vehicle objects visible (indicated by unique tag ID).
       This variant is multi-threaded
 
 	Output details
 	-------------
-	  \out_traildetection_alt\veh_A.json      -->		All results with "no pruning"
-	  \out_traildetection_alt\veh_A_c.json    -->		Objects with less than 5 data points are pruned
+	  \out_traildetection_alt\veh_A.json      -->		"frame-by-frame" info + no pruning
+	  \out_traildetection_alt\veh_A_c.json    -->		"object-by-object" informations.
   
   
 	The following default configuration is applied. Use a config file to override.

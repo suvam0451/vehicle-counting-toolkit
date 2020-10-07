@@ -4,5 +4,17 @@
       "path": ".",
       "name": "Analytics"
     }
-  ]
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "out_stackplot": true,
+      "out_traildetect": true,
+      "out_traildetection_alt": true
+    }
+  }
 }
