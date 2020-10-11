@@ -1,0 +1,7 @@
+CMakeFiles/*
+build/*
+.vscode/*
+CMakeCache.txt
+image/*
+data/*
+F_2g_skipping3/*

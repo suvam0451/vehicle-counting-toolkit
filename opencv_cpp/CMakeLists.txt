@@ -1,0 +1,44 @@
+# CMakeLists.txt
+
+# Older versions of CMake are likely to work just fine but, since
+# I don't know where to cut off I just use the version I'm using
+cmake_minimum_required(VERSION "3.17")
+
+# name of this example project
+project(opencv-traffic)
+
+# set OpenCV_DIR variable equal to the path to the cmake
+# files within the previously installed opencv program
+# set(OpenCV_DIR /Users/adammcquistan/code/c++/opencv/install/lib/cmake/opencv4)
+
+# Tell compiler to use C++ 14 features which is needed because
+# Clang version is often behind in the XCode installation
+set(CMAKE_CXX_STANDARD 14)
+
+# configure the necessary common CMake environment variables
+# needed to include and link the OpenCV program into this
+# demo project, namely OpenCV_INCLUDE_DIRS and OpenCV_LIBS
+find_package( OpenCV REQUIRED )
+
+# Log found libraries
+message(STATUS "OpenCV_INCLUDE_DIRS = ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "OpenCV_LIBS = ${OpenCV_LIBS}")
+
+# tell the build to include the headers from OpenCV
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+include_directories( /run/media/suvam/Suvam/Suvam/Github/traffic-detection-golang/opencv_cpp/include )
+
+# List include directories
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
+
+
+# set(SOURCES /run/media/suvam/Suvam/Suvam/Github/traffic-detection-golang/opencv_cpp/include/json/json.hpp)
+
+# specify the executable target to be built
+add_executable(simple-demo test.cpp)
+
+# tell it to link the executable target against OpenCV
+target_link_libraries(simple-demo ${OpenCV_LIBS} ) 

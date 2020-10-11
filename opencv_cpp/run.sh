@@ -1,0 +1,1 @@
+cmake . && cd build && make && ./simple-demo $1
