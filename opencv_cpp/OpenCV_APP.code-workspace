@@ -10,7 +10,10 @@
             "**/CVS": true,
             "**/.DS_Store": true,
             "Makefile": true,
-            "CMakeCache.txt": true
+            "CMakeCache.txt": true,
+            "CMakeFiles": true,
+            "build": true,
+            "*.cmake": true
         },
         "files.associations": {
             "iostream": "cpp",

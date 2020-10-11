@@ -67,6 +67,26 @@ void showHUD(Mat &target, VehicleCountGroup &values)
             cv::FONT_HERSHEY_DUPLEX,
             0.75,
             CV_RGB(118, 185, 0), FONT_WEIGHT);
+
+    stringIndex++;
+    stringIndex++;
+
+    putText(target, "[ ] : Cars", Point(10, target.rows / 2 + font_height * stringIndex++),
+            cv::FONT_HERSHEY_DUPLEX,
+            0.75,
+            CV_RGB(255, 0, 0), FONT_WEIGHT);
+    putText(target, "[ ] : Motorbike", Point(10, target.rows / 2 + font_height * stringIndex++),
+            cv::FONT_HERSHEY_DUPLEX,
+            0.75,
+            CV_RGB(0, 255, 0), FONT_WEIGHT);
+    putText(target, "[ ] : Trucks", Point(10, target.rows / 2 + font_height * stringIndex++),
+            cv::FONT_HERSHEY_DUPLEX,
+            0.75,
+            CV_RGB(0, 0, 255), FONT_WEIGHT);
+    putText(target, "[ ] : Bicycle", Point(10, target.rows / 2 + font_height * stringIndex++),
+            cv::FONT_HERSHEY_DUPLEX,
+            0.75,
+            CV_RGB(0, 255, 255), FONT_WEIGHT);
 }
 
 void showHelpText(Mat &target, int values)
@@ -76,8 +96,7 @@ void showHelpText(Mat &target, int values)
     int stringIndex = 0;
     double fontScale = 0.64;
 
-    vector<TextElement> msgs = {TextElement("Sexy Bitch", fontScale),
-                                TextElement("Press [P] to pause", fontScale),
+    vector<TextElement> msgs = {TextElement("Press [P] to pause", fontScale),
                                 TextElement("Press [ESC] to exit", fontScale)};
 
     for (auto it : msgs)
@@ -96,15 +115,15 @@ void drawLine(Mat &target, float start_x, float start_y, float end_x, float end_
 
 void drawDetectionObject(Mat &target, float X, float Y, int id)
 {
-    Point pt1(target.cols * X - 8.0f, target.rows * Y - 8.0f);
-    Point pt2(target.cols * X + 8.0f, target.rows * Y + 8.0f);
+    Point pt1(target.cols * X - 4.0f, target.rows * Y - 4.0f);
+    Point pt2(target.cols * X + 4.0f, target.rows * Y + 4.0f);
     Point pt3(target.cols * X, target.rows * Y);
 
-    rectangle(target, pt1, pt2, CV_RGB(50, 50, 50), 16);
+    rectangle(target, pt1, pt2, CV_RGB(50, 50, 50), 4);
     putText(target, to_string(id), pt3,
             cv::FONT_HERSHEY_DUPLEX,
-            0.75,
-            CV_RGB(100, 100, 100), FONT_WEIGHT);
+            1.0,
+            CV_RGB(100, 100, 100), FONT_WEIGHT + 2);
 }
 
 void drawRectangle(Mat &target, float X, float Y, int id)
@@ -121,7 +140,7 @@ void drawRectangle(Mat &target, float X, float Y, int id)
     case 7: // Truck (Blue)
         color = Scalar(0, 0, 255);
         break;
-    case 1: // Bicycle (Blue)
+    case 1: // Bicycle (Yellow)
         color = Scalar(0, 255, 255);
         break;
     default:
@@ -130,7 +149,7 @@ void drawRectangle(Mat &target, float X, float Y, int id)
     Point pt1(target.cols * X - 8.0f, target.rows * Y - 8.0f);
     Point pt2(target.cols * X + 8.0f, target.rows * Y + 8.0f);
 
-    rectangle(target, pt1, pt2, color, 16);
+    rectangle(target, pt1, pt2, color, 4);
 }
 
 int testDetectionValidity()
@@ -178,15 +197,13 @@ int main(int argc, char **argv)
 
     VehicleCountGroup grp;
 
-
-
     // Reading classifier data
     ifstream my_file_frame_tagged("../data/veh_G.json");
     json frame_tagged;
     frame_tagged << my_file_frame_tagged;
     my_file_frame_tagged.close();
 
-        // Reading classifier data
+    // Reading classifier data
     ifstream my_file("../data/G_2_0_02.json");
     json original_data;
     original_data << my_file;
@@ -240,7 +257,8 @@ int main(int argc, char **argv)
                     drawRectangle(frame, objs["center_x"], objs["center_y"], objs["class_id"]);
                 }
 
-                for(json &objs : frame_tagged[data_index]["frames"]) {
+                for (json &objs : frame_tagged[data_index]["frames"])
+                {
                     drawDetectionObject(frame, objs["center_x"], objs["center_y"], objs["id"]);
                 }
 
@@ -263,6 +281,20 @@ int main(int argc, char **argv)
                 if (c == 112)
                 {
                     togglePause = !togglePause;
+                }
+                if (c == 37) // Back
+                {
+                    cout << "hello world, back";
+                    cap.set(1, 3);
+                    data_index++;
+                    frame_count += 3;
+                }
+                if (c == 39) // Forward
+                {
+                    cout << "hello world, forward";
+                    cap.set(1, -3);
+                    data_index--;
+                    frame_count -= 3;
                 }
                 if (c == 27)
                 {
