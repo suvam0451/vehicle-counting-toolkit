@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"regexp"
 	"sync"
+
+	utility "gitlab.com/suvam0451/trafficdetection/utility"
 )
 
 // FrameTaggedArchive : Holds history of all past frames
@@ -81,12 +83,11 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 			func(path string, info os.FileInfo, err error) error {
 				if info.IsDir() == false && regex.MatchString(info.Name()) {
 					inputfilespath = append(inputfilespath, path)
-					// inputfilesname = append(inputfilesname, info.Name())
 				}
 				return nil
 			})
 
-		// Gnerate a single object from segmented files
+		// Unify the data files and genearte a single file
 		var SourceObject CustomFrameData
 		for _, file := range inputfilespath {
 			var tmpData CustomFrameData
@@ -98,12 +99,15 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 			}
 		}
 
-		// Multi-threaded block
+		outpath := "out_traildetect_alt"
+		utility.MakeDirectory(outpath)
+
+		// Every thread handles one group of files
 		wg.Add(1)
 		go func(data CustomFrameData, param ModelParameters, outpath, outfile string) {
-			runAnalysis(SourceObject, params, "outputnew", outfile)
+			runAnalysis(SourceObject, params, outpath, outfile)
 			wg.Done()
-		}(SourceObject, params, "outputnew", outputPath[i])
+		}(SourceObject, params, outpath, outputPath[i])
 	}
 
 	wg.Wait()

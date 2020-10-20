@@ -6,5 +6,4 @@ out_stackplot/*
 out_traildetect/*
 out_traildetect_alt/*
 # File sizes of input is very large 
-input/*
-inputnew/*
+input_.*/*

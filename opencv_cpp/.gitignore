@@ -4,5 +4,9 @@ build/*
 CMakeCache.txt
 image/*
 data/*
+build/*
 F_2g_skipping3/*
 *.MTS
+
+# Windows binaries and dependencies
+*.dll

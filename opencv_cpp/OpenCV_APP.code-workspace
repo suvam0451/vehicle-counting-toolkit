@@ -17,7 +17,9 @@
         },
         "files.associations": {
             "iostream": "cpp",
-            "string": "cpp"
-        }
+            "string": "cpp",
+            "functional": "cpp"
+        },
+        "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: Chromium, IndentWidth: 4}"
     }
 }

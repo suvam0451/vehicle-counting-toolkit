@@ -38,7 +38,7 @@ endforeach()
 # set(SOURCES /run/media/suvam/Suvam/Suvam/Github/traffic-detection-golang/opencv_cpp/include/json/json.hpp)
 
 # specify the executable target to be built
-add_executable(simple-demo test.cpp)
+add_executable(TrafficKit test.cpp)
 
 # tell it to link the executable target against OpenCV
-target_link_libraries(simple-demo ${OpenCV_LIBS} ) 
+target_link_libraries(TrafficKit ${OpenCV_LIBS} ) 
