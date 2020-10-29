@@ -13,7 +13,9 @@
             "CMakeCache.txt": true,
             "CMakeFiles": true,
             "build": true,
-            "*.cmake": true
+            "*.cmake": true,
+            "*.ps1": true,
+            "*.sh": true,
         },
         "files.associations": {
             "iostream": "cpp",
