@@ -16,6 +16,8 @@
             "*.cmake": true,
             "*.ps1": true,
             "*.sh": true,
+            ".vscode": true,
+            ".gitignore": true
         },
         "files.associations": {
             "iostream": "cpp",

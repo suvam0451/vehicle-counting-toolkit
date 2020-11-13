@@ -8,6 +8,7 @@ class Point {
     int X;
     int Y;
 
+    Point() {}
     Point(int _X, int _Y) {
         X = _X;
         Y = _Y;

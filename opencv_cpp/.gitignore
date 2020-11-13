@@ -10,3 +10,4 @@ F_2g_skipping3/*
 # Windows binaries and dependencies
 *.dll
 *.MTS
+Makefile

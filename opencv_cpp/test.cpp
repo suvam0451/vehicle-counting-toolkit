@@ -161,15 +161,21 @@ int testDetectionValidity() {
 }
 
 int main(int argc, char** argv) {
-    // testDetectionValidity();
-    // return 0;
-
     if (argc != 2) {
         cout << "Expecting a image file to be passed to program" << endl;
         return -1;
     }
 
-    VideoCapture cap(argv[1]);
+    if (argc != 3) {
+        cout << "Expecting a dat file with tagging information" << endl;
+        return -1;
+    }
+
+    // "../data/veh_G.json"
+    string __videofile = argv[1];
+    string __datafile = argv[2];
+
+    VideoCapture cap(__videofile);
     double fps = cap.get(cv::CAP_PROP_FPS);
 
     cout << "FPS of the video: " << fps << endl;
