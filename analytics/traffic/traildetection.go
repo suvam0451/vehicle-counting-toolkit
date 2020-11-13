@@ -9,6 +9,7 @@ package traffic
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
@@ -168,7 +169,7 @@ func DetectTrail(inputpath string, params ModelParameters) {
 
 func detectIndividualTrail(data trailData, params ModelParameters, filepath string) {
 	outputDir := "./out_traildetect"
-	// Ensure all output paths exist...
+	// utility.MakeDirectory(outputDir)
 	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
 		os.Mkdir(outputDir, os.ModeDir)
 	}
@@ -275,6 +276,7 @@ func detectIndividualTrail(data trailData, params ModelParameters, filepath stri
 
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
+		fmt.Println(outputDir + "/" + filepath)
 		ioutil.WriteFile(outputDir+"/"+filepath, jsonString, 0644)
 	}
 

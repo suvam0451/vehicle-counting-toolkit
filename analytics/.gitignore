@@ -1,5 +1,6 @@
 imagerefs/*
 intermediate/*
+input_traildetect/*
 *.exe
 stackplot/*
 out_stackplot/*

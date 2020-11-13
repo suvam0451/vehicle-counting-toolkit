@@ -2,6 +2,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	traffic "gitlab.com/suvam0451/trafficdetection/traffic"
 )
@@ -31,6 +33,7 @@ var traildetectCmd = &cobra.Command{
 	  Elimination threshold          : 0
 	  `,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Awesome...")
 		traffic.DetectTrail("./input_traildetect", traffic.ModelParameters{
 			Upvote:             2,
 			Downvote:           -1,
