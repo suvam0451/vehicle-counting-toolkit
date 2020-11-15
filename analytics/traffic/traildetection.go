@@ -19,8 +19,6 @@ import (
 	"sync"
 )
 
-type trailData []trailDatum
-
 type mainArchive []archiveRecord
 
 type trackArchive []VehicleTracks
@@ -31,7 +29,6 @@ type VehicleTracks struct {
 	FrameCount  int             `json:"frame_count"` // Number of frames for which this object was detected
 	ClassID     int             `json:"class_id"`    // ClassID for this vehicle tyype
 	TrackPoints []CompactCoords `json:"objects"`     // List of co-ordinates
-	// TrackPoints []object `json:"objects"`     // List of co-ordinates
 }
 
 // Holds record for all the previous frames
@@ -41,19 +38,6 @@ type archiveRecord struct {
 }
 
 type frameRecord []objectHistory
-
-type trailDatum struct {
-	FrameID  int64    `json:"frame_id"`
-	Filename string   `json:"filename"`
-	Objects  []object `json:"objects"`
-}
-
-type object struct {
-	ClassID             int                 `json:"class_id"`
-	Name                Name                `json:"name"`
-	RelativeCoordinates relativeCoordinates `json:"relative_coordinates"`
-	Confidence          float64             `json:"confidence"`
-}
 
 type objectHistory struct {
 	VehicleID           int                 `json:"id"` // ID assigned to every unique vehicle path
@@ -148,7 +132,7 @@ func DetectTrail(inputpath string, params ModelParameters) {
 			return nil
 		})
 
-	var ParsedStruct trailData
+	var ParsedStruct TrailData_Source
 	for i, file := range inputfilespath {
 		if openfile, err := os.Open(file); err == nil {
 			byteValue, _ := ioutil.ReadAll(openfile)
@@ -167,7 +151,7 @@ func DetectTrail(inputpath string, params ModelParameters) {
 	wg.Wait()
 }
 
-func detectIndividualTrail(data trailData, params ModelParameters, filepath string) {
+func detectIndividualTrail(data TrailData_Source, params ModelParameters, filepath string) {
 	outputDir := "./out_traildetect"
 	// utility.MakeDirectory(outputDir)
 	if _, err := os.Stat(outputDir); os.IsNotExist(err) {

@@ -1,14 +1,16 @@
 #pragma once
 
 #include <stdio.h>
+
 #include <fstream>
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <string>
-#include "geometry.cpp"
 
+#include "geometry.cpp"
 #include "include/json/json.hpp"
+#include "mouseevents.cpp"
 
 using namespace cv;
 using namespace std;
@@ -98,10 +100,7 @@ void showHelpText(Mat& target, int values) {
     }
 }
 
-void drawLine(Mat& target,
-              float start_x,
-              float start_y,
-              float end_x,
+void drawLine(Mat& target, float start_x, float start_y, float end_x,
               float end_y) {
     Point pt1(target.cols * start_x, target.rows * start_y);
     Point pt2(target.cols * end_x, target.rows * end_y);
@@ -160,20 +159,42 @@ int testDetectionValidity() {
     return 0;
 }
 
+void loadJSON(string filepath, json& target) {
+    ifstream tmp(filepath);
+    target << tmp;
+    tmp.close();
+}
+
+// Read the config file and raw bound lines
+void drawLinesFromConfig(cv::Mat& frameRef, json& configData) {
+    // Draw the original detection object
+    for (json& objs : configData["splits"]) {
+        // Y axis is inversed
+        float start_x = objs[0]["X"];
+        float start_y = objs[0]["Y"];
+        float end_x = objs[1]["X"];
+        float end_y = objs[1]["Y"];
+        drawLine(frameRef, start_x, 1.0 - start_y, end_x, 1.0 - end_y);
+    }
+}
+
 int main(int argc, char** argv) {
-    if (argc != 2) {
+    if (argc <= 2) {
         cout << "Expecting a image file to be passed to program" << endl;
         return -1;
     }
 
-    if (argc != 3) {
-        cout << "Expecting a dat file with tagging information" << endl;
+    if (argc <= 3) {
+        cout << "Provide frame tagged/tracking tagged data as argument 4/5"
+             << endl;
         return -1;
     }
 
     // "../data/veh_G.json"
     string __videofile = argv[1];
-    string __datafile = argv[2];
+    string __framedata = argv[2];
+    string __trackingdata = argv[3];
+    string __configfile = "config.json";
 
     VideoCapture cap(__videofile);
     double fps = cap.get(cv::CAP_PROP_FPS);
@@ -189,20 +210,25 @@ int main(int argc, char** argv) {
 
     VehicleCountGroup grp;
 
-    // Reading classifier data
-    ifstream my_file_frame_tagged("../data/veh_G.json");
+    // Original frame-by-frame data
     json frame_tagged;
-    frame_tagged << my_file_frame_tagged;
-    my_file_frame_tagged.close();
+    loadJSON(__trackingdata, frame_tagged);
 
     // Reading classifier data
-    ifstream my_file("../data/G_2_0_02.json");
     json original_data;
-    original_data << my_file;
-    my_file.close();
+    loadJSON(__framedata, original_data);
+
+    // Reading classifier data
+    json config_data;
+    loadJSON(__configfile, config_data);
+
+    MouseHandler __mouse;
 
     long long int frame_count = 0;
-    long long int data_index = 0;  // Frame skipping applied
+    long long int data_index = 0;                      // Frame skipping applied
+    int frame_skip = config_data["video_frame_skip"];  // 1 -> Normal playback
+    int sampling_frequency =
+        config_data["sampling_frequency"];  // 1 -> Normal playback
 
     while (programActive) {
         if (togglePause) {
@@ -223,36 +249,38 @@ int main(int argc, char** argv) {
                 Mat frame;
                 cap >> frame;
 
-                if (frame.empty())
-                    break;
+                if (frame.empty()) break;
 
                 showHUD(frame, grp);
-                if (toggleHelpText)
-                    showHelpText(frame, 0);
+                if (toggleHelpText) showHelpText(frame, 0);
 
                 // frame skipping
-                if (frame_count % 3 == 0) {
-                    data_index++;
-                }
+                // if (frame_count % 3 == 0) {
+                //     data_index++;
+                // }
+                data_index += frame_skip;
 
+                // Draw the original detection object
                 for (json& objs : original_data[data_index]["objects"]) {
-                    drawRectangle(frame, objs["center_x"], objs["center_y"],
+                    drawRectangle(frame,
+                                  objs["relative_coordinates"]["center_x"],
+                                  objs["relative_coordinates"]["center_y"],
                                   objs["class_id"]);
                 }
 
-                for (json& objs : frame_tagged[data_index]["frames"]) {
-                    drawDetectionObject(frame, objs["center_x"],
-                                        objs["center_y"], objs["id"]);
-                }
+                drawLinesFromConfig(frame, config_data);
 
-                drawLine(frame, 0.1, 0.8, 0.85, 0.55);
-                drawLine(frame, 0.15, 0.35, 0.3, 0.28);
-                drawLine(frame, 0.45, 0.25, 0.70, 0.30);
+                // for (json& objs : frame_tagged[data_index]["frames"]) {
+                //     drawDetectionObject(frame, objs["center_x"],
+                //                         objs["center_y"], objs["id"]);
+                // }
 
+                // cout << "hello !!!" << endl;
                 // Display the resulting frame
                 // namedWindow("Frame", cv::WINDOW_NORMAL);
                 // resizeWindow("Frame", 300, 300);
                 imshow("Frame", frame);
+                setMouseCallback("image", __mouse.onMouse, 0);
                 frame_count++;
 
                 // ESC to exit
@@ -268,14 +296,14 @@ int main(int argc, char** argv) {
                     cout << "hello world, back";
                     cap.set(1, 3);
                     data_index++;
-                    frame_count += 3;
+                    frame_count += frame_skip;
                 }
                 if (c == 39)  // Forward
                 {
                     cout << "hello world, forward";
                     cap.set(1, -3);
                     data_index--;
-                    frame_count -= 3;
+                    frame_count -= frame_skip;
                 }
                 if (c == 27) {
                     programActive = false;
@@ -283,8 +311,7 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        if (!programActive)
-            break;
+        if (!programActive) break;
     }
 
     cap.release();

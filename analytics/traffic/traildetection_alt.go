@@ -18,28 +18,11 @@ type FrameTaggedArchive struct {
 	FrameRecord []PreviousFrameObject `json:"frames"`
 }
 
-// CustomFrameData : Main container for our combined data segments
-type CustomFrameData []CompactFrame
-
-// CompactFrame : More compacted frame datas
-type CompactFrame struct {
-	FrameID int             `json:"frame_id"`
-	Objects []CompactObject `json:"objects"`
-}
-
 // TaggedObject : Represents a tagged vehicle and its trajectory
 type TaggedObject struct {
 	ObjectID int             `json:"id"`
 	ClassID  int             `json:"class_id"`
 	Data     []CompactCoords `json:"data"`
-}
-
-// CompactObject : More compact single object data
-type CompactObject struct {
-	ClassID    int     `json:"class_id"`
-	CenterX    float64 `json:"center_x"`
-	CenterY    float64 `json:"center_y"`
-	confidence float64 `json:"confidence"`
 }
 
 // PreviousFrameObject : Struct to hold
@@ -48,7 +31,7 @@ type PreviousFrameObject struct {
 	ClassID    int     `json:"class_id"`
 	CenterX    float64 `json:"center_x"`
 	CenterY    float64 `json:"center_y"`
-	confidence float64 `json:"confidence"`
+	Confidence float64 `json:"confidence"`
 	TagCounter int     `json:"tagcounter"`
 	tagged     bool
 }
@@ -88,9 +71,9 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 			})
 
 		// Unify the data files and genearte a single file
-		var SourceObject CustomFrameData
+		var SourceObject TrailData_Source
 		for _, file := range inputfilespath {
-			var tmpData CustomFrameData
+			var tmpData TrailData_Source
 			if openfile, err := os.Open(file); err == nil {
 				byteValue, _ := ioutil.ReadAll(openfile)
 				if err := json.Unmarshal(byteValue, &tmpData); err == nil {
@@ -104,7 +87,7 @@ func DetectTrailCustom(inputpath string, params ModelParameters) {
 
 		// Every thread handles one group of files
 		wg.Add(1)
-		go func(data CustomFrameData, param ModelParameters, outpath, outfile string) {
+		go func(data TrailData_Source, param ModelParameters, outpath, outfile string) {
 			runAnalysis(SourceObject, params, outpath, outfile)
 			wg.Done()
 		}(SourceObject, params, outpath, outputPath[i])
@@ -140,7 +123,7 @@ func itemExists(arrayType interface{}, item interface{}) bool {
 }
 
 /* For every alternate frame, compares to the previous frame and classifies objects that may be idle/moving with configurable accuracy */
-func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfile string) {
+func runAnalysis(source TrailData_Source, params ModelParameters, outpath, outfile string) {
 	var previousFrameData []PreviousFrameObject
 	var theArchive []FrameTaggedArchive
 	var perVehicleTrack trackArchive
@@ -160,18 +143,18 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfil
 				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged && !previousFrameData[idx].tagged {
 					// TAG_SUCCESS case : a close enough co-ordinate was detected
 					// for a previously existing entry
-					previousFrameData[idx].CenterX = currentobj.CenterX
-					previousFrameData[idx].CenterY = currentobj.CenterY
-					previousFrameData[idx].confidence = currentobj.confidence
+					previousFrameData[idx].CenterX = currentobj.RelativeCoordinates.CenterX
+					previousFrameData[idx].CenterY = currentobj.RelativeCoordinates.CenterY
+					previousFrameData[idx].Confidence = currentobj.Confidence
 					previousFrameData[idx].tagged = true
 
 					// TAG_SUCCESS case : increment the co-ordinates to the list
 					_ID := previousFrameData[idx].ObjectID
 					perVehicleTrack[_ID].TrackPoints = append(perVehicleTrack[_ID].TrackPoints,
 						CompactCoords{
-							CenterX:    currentobj.CenterX,
-							CenterY:    currentobj.CenterY,
-							Confidence: currentobj.confidence,
+							CenterX:    currentobj.RelativeCoordinates.CenterX,
+							CenterY:    currentobj.RelativeCoordinates.CenterY,
+							Confidence: currentobj.Confidence,
 						})
 					// TAG_SUCCESS case : increment the #frames for which object was tracked
 					perVehicleTrack[_ID].FrameCount++
@@ -192,17 +175,17 @@ func runAnalysis(source CustomFrameData, params ModelParameters, outpath, outfil
 
 				// TAG_FAILURE case : the vehicleID must exist in the perVehicleTrack arrays
 				perVehicleTrack[vehicleIDIndex].TrackPoints = append(perVehicleTrack[vehicleIDIndex].TrackPoints, CompactCoords{
-					CenterX:    currentobj.CenterX,
-					CenterY:    currentobj.CenterY,
-					Confidence: currentobj.confidence,
+					CenterX:    currentobj.RelativeCoordinates.CenterX,
+					CenterY:    currentobj.RelativeCoordinates.CenterY,
+					Confidence: currentobj.Confidence,
 				})
 
 				tmpStruct := PreviousFrameObject{
 					ObjectID:   vehicleIDIndex,
 					ClassID:    currentobj.ClassID,
-					CenterX:    currentobj.CenterX,
-					CenterY:    currentobj.CenterY,
-					confidence: currentobj.confidence,
+					CenterX:    currentobj.RelativeCoordinates.CenterX,
+					CenterY:    currentobj.RelativeCoordinates.CenterY,
+					Confidence: currentobj.Confidence,
 					TagCounter: 0,
 					tagged:     true,
 				}
