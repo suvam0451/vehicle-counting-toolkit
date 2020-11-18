@@ -7,6 +7,7 @@ data/*
 build/*
 F_2g_skipping3/*
 
+!build/*.sh
 # Windows binaries and dependencies
 *.dll
 *.MTS
