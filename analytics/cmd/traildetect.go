@@ -2,10 +2,10 @@
 package cmd
 
 import (
-	"fmt"
-
+	"encoding/json"
 	"github.com/spf13/cobra"
 	traffic "gitlab.com/suvam0451/trafficdetection/traffic"
+	"gitlab.com/suvam0451/trafficdetection/utility"
 )
 
 // traildetectCmd represents the traildetect command
@@ -33,14 +33,13 @@ var traildetectCmd = &cobra.Command{
 	  Elimination threshold          : 0
 	  `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Awesome...")
-		traffic.DetectTrail("./input_traildetect", traffic.ModelParameters{
-			Upvote:             2,
-			Downvote:           -1,
-			XThreshold:         0.00025,
-			YThreshold:         0.00025,
-			EliminateThreshold: 0,
-		})
+		if configBytes, err := utility.ReadJSON("./config.json"); err == nil {
+			tmp := traffic.ConfigFileSchema{}
+			json.Unmarshal(configBytes, &tmp)
+			traffic.DetectTrail("./input_traildetect")
+		} else {
+			panic("config.json file could not be found. Make sure you have appropriate permissions set")
+		}
 	},
 }
 

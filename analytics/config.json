@@ -1,3 +1,14 @@
 {
-    
+  "input_files": {
+    "traildetect_alt": "./input_traildetect",
+    "traildetect": "",
+    "stackplot": ""
+  },
+  "traildetect_alt": {
+    "rewards": 2,
+    "penalty": -1,
+    "x_threshold": 0.00025,
+    "y_threshold": 0.00025,
+    "eliminate_threshold": -10
+  }
 }

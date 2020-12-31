@@ -2,6 +2,7 @@ package traffic
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -45,7 +46,6 @@ type CompactCoords struct {
 
 // DetectTrailCustom : I am modifying the codebase for more compact data format
 func DetectTrailCustom(inputpath string, params ModelParameters) {
-
 	var wg sync.WaitGroup
 
 	// regex groups
@@ -124,111 +124,116 @@ func itemExists(arrayType interface{}, item interface{}) bool {
 
 /* For every alternate frame, compares to the previous frame and classifies objects that may be idle/moving with configurable accuracy */
 func runAnalysis(source TrailData_Source, params ModelParameters, outpath, outfile string) {
-	var previousFrameData []PreviousFrameObject
-	var theArchive []FrameTaggedArchive
-	var perVehicleTrack trackArchive
-	var vehicleIDIndex int = 0
-	var acceptedIDs = []int{2, 3, 5, 7} // car, motorbike, bus, truck
+	//var previousFrameData []PreviousFrameObject
+	//var theArchive []FrameTaggedArchive
+	//var perVehicleTrack trackArchive
+	//var vehicleIDIndex int = 0
+	//var acceptedIDs = []int{2, 3, 5, 7} // car, motorbike, bus, truck
+	fmt.Println("Reached beginning of analysis...")
 
-	for i, frame := range source {
-		for _, currentobj := range frame.Objects {
-			tagged := false
+	var tmp ConfigFileSchema
+	utility.ReadJSON("./config.json")
+	fmt.Println(tmp.TrailDetectAlt.EliminateThreshold)
 
-			// Skip for mismatch with following classes : "car", "motorbike", "bus", "truck"
-			if !FindIntInSlice(acceptedIDs, currentobj.ClassID) {
-				continue
-			}
+	//for i, frame := range source {
+	//	for _, currentobj := range frame.Objects {
+	//		tagged := false
+	//
+	//		// Skip for mismatch with following classes : "car", "motorbike", "bus", "truck"
+	//		if !FindIntInSlice(acceptedIDs, currentobj.ClassID) {
+	//			continue
+	//		}
+	//
+	//		for idx, prevobj := range previousFrameData {
+	//			if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged && !previousFrameData[idx].tagged {
+	//				// TAG_SUCCESS case : a close enough co-ordinate was detected
+	//				// for a previously existing entry
+	//				previousFrameData[idx].CenterX = currentobj.RelativeCoordinates.CenterX
+	//				previousFrameData[idx].CenterY = currentobj.RelativeCoordinates.CenterY
+	//				previousFrameData[idx].Confidence = currentobj.Confidence
+	//				previousFrameData[idx].tagged = true
+	//
+	//				// TAG_SUCCESS case : increment the co-ordinates to the list
+	//				_ID := previousFrameData[idx].ObjectID
+	//				perVehicleTrack[_ID].TrackPoints = append(perVehicleTrack[_ID].TrackPoints,
+	//					CompactCoords{
+	//						CenterX:    currentobj.RelativeCoordinates.CenterX,
+	//						CenterY:    currentobj.RelativeCoordinates.CenterY,
+	//						Confidence: currentobj.Confidence,
+	//					})
+	//				// TAG_SUCCESS case : increment the #frames for which object was tracked
+	//				perVehicleTrack[_ID].FrameCount++
+	//
+	//				tagged = true
+	//				break
+	//			}
+	//		}
+	//
+	//		// Handle if object was untagged (new object detected)
+	//		if !tagged {
+	//			// TAG_FAILURE case : Add entry for new vehicleID in list of vehicle tracks
+	//			perVehicleTrack = append(perVehicleTrack, VehicleTracks{
+	//				VehicleID:  vehicleIDIndex,
+	//				FrameCount: 1,
+	//				ClassID:    currentobj.ClassID,
+	//			})
+	//
+	//			// TAG_FAILURE case : the vehicleID must exist in the perVehicleTrack arrays
+	//			perVehicleTrack[vehicleIDIndex].TrackPoints = append(perVehicleTrack[vehicleIDIndex].TrackPoints, CompactCoords{
+	//				CenterX:    currentobj.RelativeCoordinates.CenterX,
+	//				CenterY:    currentobj.RelativeCoordinates.CenterY,
+	//				Confidence: currentobj.Confidence,
+	//			})
+	//
+	//			tmpStruct := PreviousFrameObject{
+	//				ObjectID:   vehicleIDIndex,
+	//				ClassID:    currentobj.ClassID,
+	//				CenterX:    currentobj.RelativeCoordinates.CenterX,
+	//				CenterY:    currentobj.RelativeCoordinates.CenterY,
+	//				Confidence: currentobj.Confidence,
+	//				TagCounter: 0,
+	//				tagged:     true,
+	//			}
+	//
+	//			previousFrameData = append(previousFrameData, tmpStruct)
+	//
+	//			// In the end, Increment index for next vehicle ID
+	//			vehicleIDIndex++
+	//		}
+	//	}
+	//	// Increment if tagged and reset tag status (SUCCESS_CASE handled already)
+	//	for idx, prevobj := range previousFrameData {
+	//		if prevobj.tagged {
+	//			previousFrameData[idx].TagCounter += params.Rewards
+	//		} else {
+	//			previousFrameData[idx].TagCounter += params.Penalty
+	//		}
+	//		previousFrameData[idx].tagged = false
+	//	}
+	//
+	//	// Eliminate any entry which was not tagged recently
+	//	previousFrameData, _ = Filter02(previousFrameData, params.EliminateThreshold)
+	//
+	//	// Add frame record to archive
+	//	theArchive = append(theArchive, FrameTaggedArchive{
+	//		FrameID:     i,
+	//		FrameRecord: previousFrameData,
+	//	})
+	// }
 
-			for idx, prevobj := range previousFrameData {
-				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged && !previousFrameData[idx].tagged {
-					// TAG_SUCCESS case : a close enough co-ordinate was detected
-					// for a previously existing entry
-					previousFrameData[idx].CenterX = currentobj.RelativeCoordinates.CenterX
-					previousFrameData[idx].CenterY = currentobj.RelativeCoordinates.CenterY
-					previousFrameData[idx].Confidence = currentobj.Confidence
-					previousFrameData[idx].tagged = true
-
-					// TAG_SUCCESS case : increment the co-ordinates to the list
-					_ID := previousFrameData[idx].ObjectID
-					perVehicleTrack[_ID].TrackPoints = append(perVehicleTrack[_ID].TrackPoints,
-						CompactCoords{
-							CenterX:    currentobj.RelativeCoordinates.CenterX,
-							CenterY:    currentobj.RelativeCoordinates.CenterY,
-							Confidence: currentobj.Confidence,
-						})
-					// TAG_SUCCESS case : increment the #frames for which object was tracked
-					perVehicleTrack[_ID].FrameCount++
-
-					tagged = true
-					break
-				}
-			}
-
-			// Handle if object was untagged (new object detected)
-			if !tagged {
-				// TAG_FAILURE case : Add entry for new vehicleID in list of vehicle tracks
-				perVehicleTrack = append(perVehicleTrack, VehicleTracks{
-					VehicleID:  vehicleIDIndex,
-					FrameCount: 1,
-					ClassID:    currentobj.ClassID,
-				})
-
-				// TAG_FAILURE case : the vehicleID must exist in the perVehicleTrack arrays
-				perVehicleTrack[vehicleIDIndex].TrackPoints = append(perVehicleTrack[vehicleIDIndex].TrackPoints, CompactCoords{
-					CenterX:    currentobj.RelativeCoordinates.CenterX,
-					CenterY:    currentobj.RelativeCoordinates.CenterY,
-					Confidence: currentobj.Confidence,
-				})
-
-				tmpStruct := PreviousFrameObject{
-					ObjectID:   vehicleIDIndex,
-					ClassID:    currentobj.ClassID,
-					CenterX:    currentobj.RelativeCoordinates.CenterX,
-					CenterY:    currentobj.RelativeCoordinates.CenterY,
-					Confidence: currentobj.Confidence,
-					TagCounter: 0,
-					tagged:     true,
-				}
-
-				previousFrameData = append(previousFrameData, tmpStruct)
-
-				// In the end, Increment index for next vehicle ID
-				vehicleIDIndex++
-			}
-		}
-		// Increment if tagged and reset tag status (SUCCESS_CASE handled already)
-		for idx, prevobj := range previousFrameData {
-			if prevobj.tagged {
-				previousFrameData[idx].TagCounter += params.Upvote
-			} else {
-				previousFrameData[idx].TagCounter += params.Downvote
-			}
-			previousFrameData[idx].tagged = false
-		}
-
-		// Eliminate any entry which was not tagged recently
-		previousFrameData, _ = Filter02(previousFrameData, params.EliminateThreshold)
-
-		// Add frame record to archive
-		theArchive = append(theArchive, FrameTaggedArchive{
-			FrameID:     i,
-			FrameRecord: previousFrameData,
-		})
-	}
-
-	// Ensure all output paths exist...
-	if _, err := os.Stat("./out_traildetection_alt"); os.IsNotExist(err) {
-		os.Mkdir("./out_traildetection_alt", os.ModeDir)
-	}
-
-	// Write data to file
-	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
-		ioutil.WriteFile("./out_traildetection_alt/veh_"+outfile+".json", jsonString, 0644)
-	}
-
-	// Test (pruned data - at least 10 frames) --> Noise
-	accepted, _ := PruneFalsePositives(perVehicleTrack, 5)
-	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
-		ioutil.WriteFile("./out_traildetection_alt/veh_"+outfile+"_c.json", jsonString, 0644)
-	}
+	//// Ensure all output paths exist...
+	//if _, err := os.Stat("./out_traildetection_alt"); os.IsNotExist(err) {
+	//	os.Mkdir("./out_traildetection_alt", os.ModeDir)
+	//}
+	//
+	//// Write data to file
+	//if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
+	//	ioutil.WriteFile("./out_traildetection_alt/veh_"+outfile+".json", jsonString, 0644)
+	//}
+	//
+	//// Test (pruned data - at least 10 frames) --> Noise
+	//accepted, _ := PruneFalsePositives(perVehicleTrack, 5)
+	//if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
+	//	ioutil.WriteFile("./out_traildetection_alt/veh_"+outfile+"_c.json", jsonString, 0644)
+	//}
 }

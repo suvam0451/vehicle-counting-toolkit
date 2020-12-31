@@ -10,6 +10,7 @@ package traffic
 import (
 	"encoding/json"
 	"fmt"
+	"gitlab.com/suvam0451/trafficdetection/utility"
 	"io/ioutil"
 	"math"
 	"os"
@@ -68,8 +69,8 @@ const (
 
 // ModelParameters : Parameters for our model
 type ModelParameters struct {
-	Upvote             int
-	Downvote           int
+	Rewards            int
+	Penalty            int
 	XThreshold         float64
 	YThreshold         float64
 	EliminateThreshold int
@@ -116,42 +117,46 @@ func PruneFalsePositives(archive []VehicleTracks, minThreshold int) (accepted []
 }
 
 // DetectTrail detect trails for all files in given path
-func DetectTrail(inputpath string, params ModelParameters) {
-	// ounter := 1
-	var inputfilespath []string
-	var inputfilesname []string
-	var wg sync.WaitGroup
+func DetectTrail(inputpath string) {
+	if configBytes, err := utility.ReadJSON("./config.json"); err == nil {
+		var tmp ConfigFileSchema
+		json.Unmarshal(configBytes, &tmp)
 
-	// Error already handled above
-	filepath.Walk(inputpath,
-		func(path string, info os.FileInfo, err error) error {
-			if info.IsDir() == false {
-				inputfilespath = append(inputfilespath, path)
-				inputfilesname = append(inputfilesname, info.Name())
-			}
-			return nil
-		})
+		// counter := 1
+		var inputfilespath []string
+		var inputfilesname []string
+		var wg sync.WaitGroup
 
-	var ParsedStruct TrailData_Source
-	for i, file := range inputfilespath {
-		if openfile, err := os.Open(file); err == nil {
-			byteValue, _ := ioutil.ReadAll(openfile)
-			if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
-				wg.Add(1)
+		//// Error already handled above
+		filepath.Walk(inputpath,
+			func(path string, info os.FileInfo, err error) error {
+				if info.IsDir() == false {
+					inputfilespath = append(inputfilespath, path)
+					inputfilesname = append(inputfilesname, info.Name())
+				}
+				return nil
+			})
 
-				// Send structs to separate threads
-				go func(filename string) {
-					detectIndividualTrail(ParsedStruct, params, filename)
-					wg.Done()
-				}(inputfilesname[i])
+		var ParsedStruct TrailData_Source
+		for i, file := range inputfilespath {
+			if openfile, err := os.Open(file); err == nil {
+				byteValue, _ := ioutil.ReadAll(openfile)
+				if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
+					wg.Add(1)
+
+					// Send structs to separate threads
+					go func(filename string) {
+						detectIndividualTrail(ParsedStruct, tmp.TrailDetectAlt, filename)
+						wg.Done()
+					}(inputfilesname[i])
+				}
 			}
 		}
+		wg.Wait()
 	}
-
-	wg.Wait()
 }
 
-func detectIndividualTrail(data TrailData_Source, params ModelParameters, filepath string) {
+func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, filepath string) {
 	outputDir := "./out_traildetect"
 	// utility.MakeDirectory(outputDir)
 	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
@@ -241,9 +246,9 @@ func detectIndividualTrail(data TrailData_Source, params ModelParameters, filepa
 		// Increment if tagged and reset tag status
 		for idx, prevobj := range previousFrameData {
 			if prevobj.tagged {
-				previousFrameData[idx].TagCounter += params.Upvote
+				previousFrameData[idx].TagCounter += params.Rewards
 			} else {
-				previousFrameData[idx].TagCounter += params.Downvote
+				previousFrameData[idx].TagCounter += params.Penalty
 			}
 			previousFrameData[idx].tagged = false
 		}

@@ -2,7 +2,7 @@
 
 # Older versions of CMake are likely to work just fine but, since
 # I don't know where to cut off I just use the version I'm using
-cmake_minimum_required(VERSION "3.17")
+cmake_minimum_required(VERSION "3.16")
 
 # name of this example project
 project(opencv-traffic)
