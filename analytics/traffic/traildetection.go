@@ -57,16 +57,6 @@ type relativeCoordinates struct {
 // Name : List of tag names in darknet
 type Name string
 
-const (
-	Bicycle      Name = "bicycle"
-	Bus          Name = "bus"
-	Car          Name = "car"
-	Motorbike    Name = "motorbike"
-	Person       Name = "person"
-	TrafficLight Name = "traffic light"
-	Truck        Name = "truck"
-)
-
 // ModelParameters : Parameters for our model
 type ModelParameters struct {
 	Rewards            int
@@ -124,30 +114,30 @@ func CreateMissingDirectories() {
 }
 
 // DetectTrail detect trails for all files in given path
-func DetectTrail(inputpath string, config TrailDetectAltConfig) {
+func DetectTrail(inputPath string, config TrailDetectAltConfig) {
 	defer CreateMissingDirectories()
-	var inputfilespath []string
-	var inputfilesname []string
+	var inputFilesPath []string
+	var inputFilesName []string
 	var wg sync.WaitGroup
 
-	if eval, _ := utility.PathExists(inputpath); eval == false {
+	if eval, _ := utility.PathExists(inputPath); eval == false {
 		panic("input filepath missing !")
 	}
 
 	//// Error already handled above
-	filepath.Walk(inputpath,
+	filepath.Walk(inputPath,
 		func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() == false {
-				inputfilespath = append(inputfilespath, path)
-				inputfilesname = append(inputfilesname, info.Name())
+				inputFilesPath = append(inputFilesPath, path)
+				inputFilesName = append(inputFilesName, info.Name())
 			}
 			return nil
 		})
 
 	var ParsedStruct TrailData_Source
-	for i, file := range inputfilespath {
-		if openfile, err := os.Open(file); err == nil {
-			byteValue, _ := ioutil.ReadAll(openfile)
+	for i, file := range inputFilesPath {
+		if openFile, err := os.Open(file); err == nil {
+			byteValue, _ := ioutil.ReadAll(openFile)
 			if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
 				wg.Add(1)
 
@@ -155,7 +145,7 @@ func DetectTrail(inputpath string, config TrailDetectAltConfig) {
 				go func(filename string) {
 					detectIndividualTrail(ParsedStruct, config, filename)
 					wg.Done()
-				}(inputfilesname[i])
+				}(inputFilesName[i])
 			}
 		}
 	}
@@ -169,10 +159,10 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 		os.Mkdir(outputDir, os.ModeDir)
 	}
 
-	var previousFrameData frameRecord
-	var theArchive mainArchive
-	var perVehicleTrack trackArchive
-	var vehicleIDIndex int = 0
+	previousFrameData := frameRecord{}
+	theArchive := mainArchive{}
+	perVehicleTrack := trackArchive{}
+	vehicleIDIndex := 0
 	/*
 		LOGIC
 		----------
@@ -186,25 +176,25 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 		Filter out elements with very low scores
 	*/
 	for i, frame := range data {
-		for _, currentobj := range frame.Objects {
+		for _, currentObj := range frame.Objects {
 			tagged := false // will be set to true if object gets assigned to one of the previous frame objects
 
-			for idx, prevobj := range previousFrameData {
+			for idx, prevObj := range previousFrameData {
 				// ID match with untagged object
-				if prevobj.ClassID == currentobj.ClassID && !prevobj.tagged {
+				if prevObj.ClassID == currentObj.ClassID && !prevObj.tagged {
 					// Distance calculations
-					if math.Abs(currentobj.RelativeCoordinates.CenterY-prevobj.RelativeCoordinates.CenterY) < params.YThreshold {
+					if math.Abs(currentObj.RelativeCoordinates.CenterY-prevObj.RelativeCoordinates.CenterY) < params.YThreshold {
 						// TAG_SUCCESS case : a close enough co-ordinate was detected for a previously existing entry
-						previousFrameData[idx].RelativeCoordinates = currentobj.RelativeCoordinates
+						previousFrameData[idx].RelativeCoordinates = currentObj.RelativeCoordinates
 						previousFrameData[idx].tagged = true
 						tagged = true
 
 						// TAG_SUCCESS case : increment the co-ordinates to the list
 						perVehicleTrack[previousFrameData[idx].VehicleID].TrackPoints = append(perVehicleTrack[previousFrameData[idx].VehicleID].TrackPoints,
 							CompactCoords{
-								CenterX:    currentobj.RelativeCoordinates.CenterX,
-								CenterY:    currentobj.RelativeCoordinates.CenterY,
-								Confidence: currentobj.Confidence,
+								CenterX:    currentObj.RelativeCoordinates.CenterX,
+								CenterY:    currentObj.RelativeCoordinates.CenterY,
+								Confidence: currentObj.Confidence,
 							})
 						// TAG_SUCCESS case : increment the #frames for which object was tracked
 						perVehicleTrack[previousFrameData[idx].VehicleID].FrameCount++
@@ -215,7 +205,7 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 			// Handle if object was untagged (new object detected)
 			if !tagged {
 				// SKIP : "traffic_light": 9, "person" : 0
-				if currentobj.ClassID == 9 || currentobj.ClassID == 0 {
+				if currentObj.ClassID == 9 || currentObj.ClassID == 0 {
 					continue
 				}
 
@@ -223,21 +213,21 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 				perVehicleTrack = append(perVehicleTrack, VehicleTracks{
 					VehicleID:  vehicleIDIndex,
 					FrameCount: 1,
-					ClassID:    currentobj.ClassID,
+					ClassID:    currentObj.ClassID,
 				})
 
 				// TAG_FAILURE case : the vehicleID must exist in the perVehicleTrack arrays
 				perVehicleTrack[vehicleIDIndex].TrackPoints = append(perVehicleTrack[vehicleIDIndex].TrackPoints, CompactCoords{
-					CenterX:    currentobj.RelativeCoordinates.CenterX,
-					CenterY:    currentobj.RelativeCoordinates.CenterY,
-					Confidence: currentobj.Confidence,
+					CenterX:    currentObj.RelativeCoordinates.CenterX,
+					CenterY:    currentObj.RelativeCoordinates.CenterY,
+					Confidence: currentObj.Confidence,
 				})
 
 				tmpStruct := objectHistory{
 					VehicleID:           vehicleIDIndex,
-					ClassID:             currentobj.ClassID,
-					Name:                currentobj.Name,
-					RelativeCoordinates: currentobj.RelativeCoordinates,
+					ClassID:             currentObj.ClassID,
+					Name:                currentObj.Name,
+					RelativeCoordinates: currentObj.RelativeCoordinates,
 					TagCounter:          0,
 					tagged:              true,
 				}
@@ -250,8 +240,8 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 		}
 
 		// Increment if tagged and reset tag status
-		for idx, prevobj := range previousFrameData {
-			if prevobj.tagged {
+		for idx, previousObj := range previousFrameData {
+			if previousObj.tagged {
 				previousFrameData[idx].TagCounter += params.Rewards
 			} else {
 				previousFrameData[idx].TagCounter += params.Penalty
@@ -272,7 +262,7 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 	// Write data to file
 	if jsonString, err := json.MarshalIndent(theArchive, "", " "); err == nil {
 		fmt.Println(outputDir + "/" + filepath)
-		ioutil.WriteFile(outputDir+"/"+filepath, jsonString, 0644)
+		_ = ioutil.WriteFile(outputDir+"/"+filepath, jsonString, 0644)
 	}
 
 	// The following comments assume, that the sampling was done at 1 frame interval, for a 24 fps stream
@@ -294,6 +284,6 @@ func pruneAndWrite(outputPath, filepath, suffix string, data trackArchive, prune
 	accepted, _ := PruneFalsePositives(data, pruneParam)
 	if jsonString, err := json.MarshalIndent(accepted, "", " "); err == nil {
 		vehicleDataPath := strings.TrimSuffix(filepath, path.Ext(filepath)) + suffix
-		ioutil.WriteFile(outputPath+"/"+vehicleDataPath, jsonString, 0644)
+		_ = ioutil.WriteFile(outputPath+"/"+vehicleDataPath, jsonString, 0644)
 	}
 }

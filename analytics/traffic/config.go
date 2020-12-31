@@ -4,6 +4,13 @@ package traffic
 type ConfigFileSchema struct {
 	InputFiles     InputFileConfig      `json:"input_files"`
 	TrailDetectAlt TrailDetectAltConfig `json:"traildetect_alt"` // ID given to the vehicle
+	OutputDirs     OutputFileConfig     `json:"output_paths"`
+}
+
+// OutputFileConfig
+type OutputFileConfig struct {
+	TrailDetectAlt string `json:"traildetect_alt"`
+	TrailDetect    string `json:"traildetect"`
 }
 
 // InputFileConfig bargain

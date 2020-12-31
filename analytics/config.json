@@ -4,11 +4,15 @@
     "traildetect": "",
     "stackplot": ""
   },
+  "output_paths": {
+    "traildetect_alt": "./output_traildetect",
+    "traildetect": "./output_traildetect"
+  },
   "traildetect_alt": {
-    "rewards": 2,
+    "rewards": 3,
     "penalty": -1,
-    "x_threshold": 0.00025,
-    "y_threshold": 0.00025,
+    "x_threshold": 0.001,
+    "y_threshold": 0.001,
     "eliminate_threshold": -10
   }
 }

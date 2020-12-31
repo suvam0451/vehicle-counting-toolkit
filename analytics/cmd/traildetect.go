@@ -36,7 +36,7 @@ var traildetectCmd = &cobra.Command{
 		if configBytes, err := utility.ReadJSON("./config.json"); err == nil {
 			tmp := traffic.ConfigFileSchema{}
 			json.Unmarshal(configBytes, &tmp)
-			traffic.DetectTrail(tmp.InputFiles.TrailDetectAlt)
+			traffic.DetectTrail(tmp.InputFiles.TrailDetectAlt, tmp.TrailDetectAlt)
 		} else {
 			panic("config.json file could not be found. Make sure you have appropriate permissions set")
 		}
