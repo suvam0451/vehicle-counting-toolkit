@@ -2,7 +2,7 @@ package traffic
 
 // ConfigFileSchema Lists of positions w/confidence through which vehicle has passed
 type ConfigFileSchema struct {
-	InputFiles    InputFileConfig `json:"input_files"`
+	InputFiles     InputFileConfig      `json:"input_files"`
 	TrailDetectAlt TrailDetectAltConfig `json:"traildetect_alt"` // ID given to the vehicle
 }
 

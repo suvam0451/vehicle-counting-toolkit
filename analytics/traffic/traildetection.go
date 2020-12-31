@@ -28,7 +28,7 @@ type trackArchive []VehicleTracks
 type VehicleTracks struct {
 	VehicleID   int             `json:"vehicle_id"`  // ID given to the vehicle
 	FrameCount  int             `json:"frame_count"` // Number of frames for which this object was detected
-	ClassID     int             `json:"class_id"`    // ClassID for this vehicle tyype
+	ClassID     int             `json:"class_id"`    // ClassID for this vehicle type
 	TrackPoints []CompactCoords `json:"objects"`     // List of co-ordinates
 }
 
@@ -116,44 +116,50 @@ func PruneFalsePositives(archive []VehicleTracks, minThreshold int) (accepted []
 	return
 }
 
+func CreateMissingDirectories() {
+	if r := recover(); r != nil {
+		utility.EnsureFile("./config.json")
+		fmt.Println("Restored required missing file: ", r)
+	}
+}
+
 // DetectTrail detect trails for all files in given path
-func DetectTrail(inputpath string) {
-	if configBytes, err := utility.ReadJSON("./config.json"); err == nil {
-		var tmp ConfigFileSchema
-		json.Unmarshal(configBytes, &tmp)
+func DetectTrail(inputpath string, config TrailDetectAltConfig) {
+	defer CreateMissingDirectories()
+	var inputfilespath []string
+	var inputfilesname []string
+	var wg sync.WaitGroup
 
-		// counter := 1
-		var inputfilespath []string
-		var inputfilesname []string
-		var wg sync.WaitGroup
+	if eval, _ := utility.PathExists(inputpath); eval == false {
+		panic("input filepath missing !")
+	}
 
-		//// Error already handled above
-		filepath.Walk(inputpath,
-			func(path string, info os.FileInfo, err error) error {
-				if info.IsDir() == false {
-					inputfilespath = append(inputfilespath, path)
-					inputfilesname = append(inputfilesname, info.Name())
-				}
-				return nil
-			})
+	//// Error already handled above
+	filepath.Walk(inputpath,
+		func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() == false {
+				inputfilespath = append(inputfilespath, path)
+				inputfilesname = append(inputfilesname, info.Name())
+			}
+			return nil
+		})
 
-		var ParsedStruct TrailData_Source
-		for i, file := range inputfilespath {
-			if openfile, err := os.Open(file); err == nil {
-				byteValue, _ := ioutil.ReadAll(openfile)
-				if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
-					wg.Add(1)
+	var ParsedStruct TrailData_Source
+	for i, file := range inputfilespath {
+		if openfile, err := os.Open(file); err == nil {
+			byteValue, _ := ioutil.ReadAll(openfile)
+			if err := json.Unmarshal(byteValue, &ParsedStruct); err == nil {
+				wg.Add(1)
 
-					// Send structs to separate threads
-					go func(filename string) {
-						detectIndividualTrail(ParsedStruct, tmp.TrailDetectAlt, filename)
-						wg.Done()
-					}(inputfilesname[i])
-				}
+				// Send structs to separate threads
+				go func(filename string) {
+					detectIndividualTrail(ParsedStruct, config, filename)
+					wg.Done()
+				}(inputfilesname[i])
 			}
 		}
-		wg.Wait()
 	}
+	wg.Wait()
 }
 
 func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, filepath string) {
@@ -171,7 +177,7 @@ func detectIndividualTrail(data TrailData_Source, params TrailDetectAltConfig, f
 		LOGIC
 		----------
 		For each frame, loop over the objects, compare the elements to the previously stored elements.
-		If classes match and the object hasnt been tagged, check the displacement and see if it's under the threshold.
+		If classes match and the object has not been tagged, check the displacement and see if it's under the threshold.
 		Add the item to list.
 
 		If the element is still untagged, then check the classID and insert it as a new key
