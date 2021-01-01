@@ -122,8 +122,26 @@ python main.py
 - [Q] to quit
 - While video is paused, drawing a line on the canvas records the coordinates (which can be viewed once video is unpaused)
 
-#### Marking lines
+## HUD overview
+
+Summary of the various visible counters _(Refer screenshots below)_
+
+| Counter Positons        | Significance                                        |
+| ----------------------- | --------------------------------------------------- |
+| Leftmost _(skyblue)_    | Detected objects in current frame                   |
+| Second left _(skyblue)_ | Total count for principle line of reference         |
+| Top-right _(blue)_      | Normalized Start/Stop position of your line gesture |
+
+Sumamry of other visible information
+
+| Overlay positions        | Significance                    |
+| ------------------------ | ------------------------------- |
+| Bottom-Right _(skyblue)_ | Key reference. H to hide/unhide |
 
 ## Screenshots
 
 ![Demo001](./assets/001.png)
+
+![Demo002](./assets/002.png)
+
+![Demo002](./assets/003.png)
