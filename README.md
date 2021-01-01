@@ -1,8 +1,55 @@
-# Traffic Detection Golang
+# Vehicle Counting Toolkit
 
-Poring my traffic detection algorithm codes to golang.
+An analyst's tool to assist in traffic volumetric measurement using your preferable choice of object detection model.
 
-## Goals
+## Installation
+
+You can download the latest stable release from [here]()
+
+The bundle consists of batch scripts for working with [darknet](https://github.com/AlexeyAB/darknet)
+
+## Pre-Requisites
+
+You have to download and install [CUDA](https://developer.nvidia.com/cuda-downloads), [cuDNN](https://developer.nvidia.com/cuDNN) and [cmake](https://cmake.org/install/). If you use an ubuntu based operating system, you can run teh following commands:
+
+#### Ubuntu
+
+```sh
+
+```
+
+#### RedHat/CentOS/Fedora
+
+```sh
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+# Install from F32 channel. The dependencies for F33 channel are currently broken
+sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/fedora32/x86_64/cuda-fedora32.repo
+sudo dnf clean all
+sudo dnf module disable nvidia-driver
+sudo dnf -y install cuda
+# Other tools
+sudo dnf -y install cmake cmake-gui
+```
+
+For running the python scripts, the recommended method is miniconda
+
+#### Ubuntu
+
+#### RedHat/CentOS/Fedora
+
+```sh
+sudo dnf -y install conda
+conda init zsh # or conda init bash
+# restart shell
+conda create -n {your-env-name-choice} python=3.7
+conda activate {your-env-name-choice}
+conda install -c conda-forge opencv
+conda install numpy scikit-learn matplotlib
+```
+
+## Examples
+
+The following example demonstrate how to use the tools specifically for tinyYOLO and the COCO dataset.
 
 This project is aimed towards creation of feasible real-time solutions for determining traffic flow characteristics and
 statistics data generation using available lane information and general day-to-day vehicle behavior.
