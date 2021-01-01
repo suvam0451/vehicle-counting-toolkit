@@ -6,11 +6,11 @@ An analyst's tool to assist in traffic volumetric measurement using your prefera
 
 You can download the latest stable release from [here]()
 
-The bundle consists of batch scripts for working with [darknet](https://github.com/AlexeyAB/darknet)
+The bundle consists of a collection of batch scripts for working with [darknet](https://github.com/AlexeyAB/darknet) library, a command-line tool for generating tracking database and some python scripts for end-user analysts functions.
 
 ## Pre-Requisites
 
-You have to download and install [CUDA](https://developer.nvidia.com/cuda-downloads), [cuDNN](https://developer.nvidia.com/cuDNN) and [cmake](https://cmake.org/install/). If you use an ubuntu based operating system, you can run teh following commands:
+You have to download and install [CUDA (v11.2 or higher)](https://developer.nvidia.com/cuda-downloads), [cuDNN (v11.2 or higher)](https://developer.nvidia.com/cuDNN) and [cmake v3.16 or higher](https://cmake.org/install/). Windows users may follow the respective webpages for installation instructions. For linux users, use the following commands
 
 #### Ubuntu
 
